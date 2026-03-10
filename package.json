@@ -1,0 +1,14 @@
+{
+  "name": "task-queue",
+  "private": true,
+  "workspaces": [
+    "app/*",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
