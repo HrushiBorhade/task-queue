@@ -1,11 +1,9 @@
 "use client";
 
 import { useRef, useEffect, useState, memo } from "react";
-import { motion, AnimatePresence } from "motion/react";
 import type { Tables } from "@/lib/database.types";
 import type { ImageGenOutput } from "@repo/shared";
 import { useTasks } from "@/hooks/use-tasks";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -14,6 +12,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ImageDialog } from "@/components/image-dialog";
@@ -26,8 +31,8 @@ import {
   FilePdf,
   WebhooksLogo,
   ChartBar,
+  CaretUpDown,
 } from "@phosphor-icons/react";
-import { spring } from "@/lib/animations";
 import { track } from "@/lib/analytics";
 
 /* ── Config ────────────────────────────────────────── */
@@ -209,67 +214,71 @@ export function TaskGrid({
     return () => observer.disconnect();
   }, [hasNextPage, fetchNextPage]);
 
+  const activeLabel = FILTERS.find((f) => f.value === filter)?.label ?? "All";
+  const showEmpty = !isLoading && tasks.length === 0;
+
   return (
     <div className="flex flex-col gap-3">
-      <Tabs
-        value={filter}
-        onValueChange={(v) => {
-          setFilter(v);
-          track("filter_changed", { filter: v });
-        }}
-      >
-        <TabsList>
-          {FILTERS.map((f) => (
-            <TabsTrigger key={f.value} value={f.value} className="text-xs">
-              {f.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
-
-      <AnimatePresence mode="popLayout">
-        <motion.div
-          key={filter}
-          initial={{ opacity: 0, x: 8, filter: "blur(4px)" }}
-          animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
-          exit={{ opacity: 0, x: -8, filter: "blur(4px)" }}
-          transition={spring}
-        >
-          {!isLoading && tasks.length === 0 ? (
-            <div className="flex items-center justify-center rounded-lg border border-dashed p-12">
-              <p className="text-xs text-muted-foreground">
-                {filter === "all"
-                  ? "No tasks yet. Create one to get started."
-                  : `No ${filter} tasks.`}
-              </p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[140px]">Type</TableHead>
-                  <TableHead>Prompt</TableHead>
-                  <TableHead className="w-[100px]">Status</TableHead>
-                  <TableHead className="w-[120px]">Progress</TableHead>
-                  <TableHead className="w-[80px] text-right">Time</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <SkeletonRows />
-                ) : (
-                  <>
-                    {tasks.map((task) => (
-                      <TaskRow key={task.id} task={task} />
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[140px]">Type</TableHead>
+            <TableHead>Prompt</TableHead>
+            <TableHead className="w-[100px]">
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center gap-1 cursor-pointer select-none hover:text-foreground transition-colors -mx-1 px-1 rounded">
+                  Status
+                  {filter !== "all" && (
+                    <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+                      {activeLabel}
+                    </Badge>
+                  )}
+                  <CaretUpDown className="size-3 text-muted-foreground" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuRadioGroup
+                    value={filter}
+                    onValueChange={(v) => {
+                      setFilter(v);
+                      track("filter_changed", { filter: v });
+                    }}
+                  >
+                    {FILTERS.map((f) => (
+                      <DropdownMenuRadioItem key={f.value} value={f.value}>
+                        {f.label}
+                      </DropdownMenuRadioItem>
                     ))}
-                    {isFetchingNextPage && <SkeletonRows count={3} />}
-                  </>
-                )}
-              </TableBody>
-            </Table>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </TableHead>
+            <TableHead className="w-[120px]">Progress</TableHead>
+            <TableHead className="w-[80px] text-right">Time</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {isLoading ? (
+            <SkeletonRows />
+          ) : showEmpty ? (
+            <TableRow>
+              <TableCell colSpan={5} className="h-32 text-center">
+                <p className="text-xs text-muted-foreground">
+                  {filter === "all"
+                    ? "No tasks yet. Create one to get started."
+                    : `No ${filter} tasks.`}
+                </p>
+              </TableCell>
+            </TableRow>
+          ) : (
+            <>
+              {tasks.map((task) => (
+                <TaskRow key={task.id} task={task} />
+              ))}
+              {isFetchingNextPage && <SkeletonRows count={3} />}
+            </>
           )}
-        </motion.div>
-      </AnimatePresence>
+        </TableBody>
+      </Table>
 
       <div ref={sentinelRef} className="h-1" />
     </div>
