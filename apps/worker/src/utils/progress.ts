@@ -1,3 +1,4 @@
+import type { Job } from "bullmq";
 import { eq } from "drizzle-orm";
 import { tasks, taskEvents } from "@repo/shared";
 import type { BroadcastEvent } from "@repo/shared";
@@ -8,12 +9,14 @@ import { createLogger } from "../lib/logger";
 const log = createLogger({ module: "progress" });
 
 export class ProgressTracker {
+  private job: Job;
   private taskId: string;
   private userId: string;
   private pendingProgress: number | null = null;
   private flushTimer: ReturnType<typeof setInterval> | null = null;
 
-  constructor(taskId: string, userId: string) {
+  constructor(job: Job, taskId: string, userId: string) {
+    this.job = job;
     this.taskId = taskId;
     this.userId = userId;
 
@@ -59,9 +62,15 @@ export class ProgressTracker {
     broadcastTaskEvent(this.taskId, event);
   }
 
-  /** Update progress percentage — throttled DB write + broadcast */
+  /** Update progress percentage — BullMQ job + throttled DB write + broadcast */
   updateProgress(progress: number, message?: string): void {
     this.pendingProgress = progress;
+
+    // Update BullMQ job progress in Redis — keeps lock alive + enables
+    // job.progress in Bull Board, QueueEvents 'progress' listener, etc.
+    this.job.updateProgress(progress).catch((err) => {
+      log.error({ taskId: this.taskId, err }, "Failed to update BullMQ job progress");
+    });
 
     broadcastTaskEvent(this.taskId, {
       type: "progress",
@@ -85,6 +94,22 @@ export class ProgressTracker {
       this.pendingProgress = progress;
       log.error({ taskId: this.taskId, err }, "Failed to flush progress");
     }
+  }
+
+  /** Mark complete — clears pending progress so destroy() won't overwrite */
+  complete(): void {
+    this.pendingProgress = null;
+
+    this.job.updateProgress(100).catch((err) => {
+      log.error({ taskId: this.taskId, err }, "Failed to update BullMQ job progress to 100");
+    });
+
+    broadcastTaskEvent(this.taskId, {
+      type: "progress",
+      message: "Complete",
+      progress: 100,
+      timestamp: new Date().toISOString(),
+    });
   }
 
   /** Cleanup: flush remaining progress, clear timer, remove channel */
