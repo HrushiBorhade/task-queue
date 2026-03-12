@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { ArrowLeft } from "@phosphor-icons/react";
 import { ImageDialog } from "@/components/image-dialog";
 import { useState } from "react";
-import { timeAgo, formatLabel, getImageOutput, TYPE_ICON, TASK_STATUS_BADGE } from "@/lib/task-utils";
+import { formatLabel, getImageOutput, TYPE_ICON, TASK_STATUS_BADGE } from "@/lib/task-utils";
 
 interface Props {
   task: Tables<"tasks">;

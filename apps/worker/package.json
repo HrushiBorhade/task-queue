@@ -8,7 +8,7 @@
   "type": "module",
   "scripts": {
     "dev": "bun --watch src/index.ts",
-    "check:types": "tsc --noEmit"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@bull-board/api": "^6.20.3",
