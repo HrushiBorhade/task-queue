@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useCallback } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, LazyMotion, m, domAnimation } from "motion/react";
 import type { Tables } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
@@ -87,6 +87,7 @@ interface Props {
 }
 
 export function BatchesPageClient({ initialBatches }: Props) {
+  const router = useRouter();
   const createBatch = useCreateBatch();
   const { data: batches = [] } = useBatches(initialBatches);
   const [batchFilter, setBatchFilter] = useState("all");
@@ -106,8 +107,12 @@ export function BatchesPageClient({ initialBatches }: Props) {
       const prompts = SAMPLE_PROMPTS[type];
       return { type, input: { prompt: randomItem(prompts) } };
     });
-    createBatch.mutate(tasks);
-  }, [createBatch]);
+    createBatch.mutate(tasks, {
+      onSuccess: (data) => {
+        router.push(`/dashboard/batches/${data.batch.id}`);
+      },
+    });
+  }, [createBatch, router]);
 
   const showEmpty = filteredBatches.length === 0;
 
@@ -189,14 +194,15 @@ export function BatchesPageClient({ initialBatches }: Props) {
             </TableRow>
           ) : (
             filteredBatches.map((batch) => (
-              <TableRow key={batch.id} className="cursor-pointer hover:bg-muted/50">
+              <TableRow
+                key={batch.id}
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={() => router.push(`/dashboard/batches/${batch.id}`)}
+              >
                 <TableCell>
-                  <Link
-                    href={`/dashboard/batches/${batch.id}`}
-                    className="font-mono text-xs hover:underline"
-                  >
+                  <span className="font-mono text-xs">
                     {batch.id.slice(0, 8)}...
-                  </Link>
+                  </span>
                 </TableCell>
                 <TableCell>
                   <Badge variant={STATUS_BADGE[batch.status] ?? "outline"}>

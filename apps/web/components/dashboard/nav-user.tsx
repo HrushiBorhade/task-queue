@@ -51,7 +51,7 @@ export function NavUser({ user }: NavUserProps) {
               size="lg"
               className="data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground group-data-[collapsible=icon]:p-1!"
             >
-              <Avatar className="size-8 rounded-lg">
+              <Avatar className="size-8 rounded-lg after:rounded-lg">
                 <AvatarFallback className="rounded-lg text-xs">
                   {getInitials(user.email)}
                 </AvatarFallback>
