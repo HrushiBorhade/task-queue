@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { FieldDescription } from "@/components/ui/field";
 import { ThemeToggle } from "@/components/theme-toggle";
+
+export const metadata: Metadata = {
+  title: "Sign In — Task Queue",
+  description: "Sign in to your Task Queue account",
+};
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -15,10 +20,6 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
       <div className="w-full max-w-sm md:max-w-4xl">
         {children}
       </div>
-      <FieldDescription className="mt-4 px-6 text-center">
-        By clicking continue, you agree to our{" "}
-        <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
-      </FieldDescription>
     </div>
   );
 }
