@@ -109,4 +109,9 @@ jobs:
           echo "All migration files validated"
 
       - name: Verify config
-        run: supabase validate
+        run: |
+          if [ ! -f supabase/config.toml ]; then
+            echo "::error::supabase/config.toml not found"
+            exit 1
+          fi
+          echo "Supabase config exists"

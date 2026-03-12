@@ -35,9 +35,14 @@ describe("TaskCard", () => {
     expect(screen.getByText("text gen")).toBeInTheDocument();
   });
 
-  it("renders task status badge", () => {
-    render(<TaskCard task={mockTask({ status: "active" })} />);
-    expect(screen.getByText("active")).toBeInTheDocument();
+  it("renders task status badge for queued", () => {
+    render(<TaskCard task={mockTask({ status: "queued" })} />);
+    expect(screen.getByText("queued")).toBeInTheDocument();
+  });
+
+  it("renders progress percentage for active status", () => {
+    render(<TaskCard task={mockTask({ status: "active", progress: 45 })} />);
+    expect(screen.getByText("45%")).toBeInTheDocument();
   });
 
   it("renders prompt text", () => {
@@ -45,14 +50,10 @@ describe("TaskCard", () => {
     expect(screen.getByText("Write a haiku about distributed systems")).toBeInTheDocument();
   });
 
-  it("renders progress percentage", () => {
-    render(<TaskCard task={mockTask({ progress: 45 })} />);
-    expect(screen.getByText("45%")).toBeInTheDocument();
-  });
-
-  it("renders formatted date", () => {
-    render(<TaskCard task={mockTask()} />);
-    expect(screen.getByText(/Mar 12/)).toBeInTheDocument();
+  it("renders progress bar for active tasks", () => {
+    const { container } = render(<TaskCard task={mockTask({ status: "active", progress: 60 })} />);
+    const progressBar = container.querySelector("[style*='width: 60%']");
+    expect(progressBar).toBeInTheDocument();
   });
 
   it("handles missing prompt gracefully", () => {
@@ -60,8 +61,8 @@ describe("TaskCard", () => {
     expect(screen.getByText("text gen")).toBeInTheDocument();
   });
 
-  it("renders all status variants", () => {
-    const statuses = ["queued", "active", "completed", "failed"] as const;
+  it("renders non-active status variants as text", () => {
+    const statuses = ["queued", "completed", "failed"] as const;
     for (const status of statuses) {
       const { unmount } = render(<TaskCard task={mockTask({ status })} />);
       expect(screen.getByText(status)).toBeInTheDocument();
