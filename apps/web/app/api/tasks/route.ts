@@ -1,34 +1,48 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { getUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addTaskToQueue } from "@/lib/queue";
 import { TASK_TYPES, type TaskType, type TaskInput } from "@repo/shared";
 import type { Json } from "@/lib/database.types";
 
-export async function POST(request: Request) {
-  let user;
+const PAGE_SIZE = 20;
+
+function error(message: string, status: number): NextResponse {
+  return NextResponse.json({ error: message }, { status });
+}
+
+async function requireUser(): Promise<
+  | { user: { id: string; email: string }; error?: never }
+  | { user?: never; error: NextResponse }
+> {
   try {
-    user = await getUser();
+    const user = await getUser();
+    if (!user) return { error: error("Unauthorized", 401) };
+    return { user };
   } catch {
-    return NextResponse.json({ error: "Auth service unavailable" }, { status: 503 });
+    return { error: error("Auth service unavailable", 503) };
   }
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+}
+
+export async function POST(request: Request) {
+  const auth = await requireUser();
+  if (auth.error) return auth.error;
+  const { user } = auth;
 
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return error("Invalid JSON body", 400);
   }
   const { type, input } = body as { type: TaskType; input: TaskInput };
 
   if (!type || !TASK_TYPES.includes(type)) {
-    return NextResponse.json({ error: "Invalid task type" }, { status: 400 });
+    return error("Invalid task type", 400);
   }
   if (!input?.prompt) {
-    return NextResponse.json({ error: "Input prompt is required" }, { status: 400 });
+    return error("Input prompt is required", 400);
   }
 
   const supabase = createAdminClient();
@@ -40,7 +54,8 @@ export async function POST(request: Request) {
     .single();
 
   if (dbError || !task) {
-    return NextResponse.json({ error: "Failed to create task" }, { status: 500 });
+    Sentry.captureException(dbError, { extra: { type, userId: user.id } });
+    return error("Failed to create task", 500);
   }
 
   let jobId: string;
@@ -52,45 +67,67 @@ export async function POST(request: Request) {
       input,
       attempt: 0,
     });
-  } catch {
+  } catch (enqueueErr) {
+    Sentry.captureException(enqueueErr, { extra: { taskId: task.id, type } });
     await supabase
       .from("tasks")
       .update({ status: "failed", error: "Failed to enqueue" })
       .eq("id", task.id);
-    return NextResponse.json({ error: "Failed to enqueue task" }, { status: 500 });
+    return error("Failed to enqueue task", 500);
   }
 
-  await supabase
+  const { error: updateError } = await supabase
     .from("tasks")
     .update({ bullmq_job_id: jobId })
     .eq("id", task.id);
 
+  if (updateError) {
+    console.error(`Failed to persist bullmq_job_id for task ${task.id}:`, updateError.message);
+  }
+
   return NextResponse.json({ task }, { status: 201 });
 }
 
-export async function GET() {
-  let user;
-  try {
-    user = await getUser();
-  } catch {
-    return NextResponse.json({ error: "Auth service unavailable" }, { status: 503 });
-  }
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+type TaskStatus = "queued" | "active" | "completed" | "failed";
+const VALID_STATUSES = new Set<TaskStatus>(["queued", "active", "completed", "failed"]);
+
+export async function GET(request: NextRequest) {
+  const auth = await requireUser();
+  if (auth.error) return auth.error;
+  const { user } = auth;
+
+  const { searchParams } = request.nextUrl;
+  const page = Math.max(Number(searchParams.get("page") ?? 0), 0);
+  const status = searchParams.get("status");
+  const limit = Math.min(Number(searchParams.get("limit") ?? PAGE_SIZE), 50);
 
   const supabase = createAdminClient();
 
-  const { data: taskList, error } = await supabase
+  // Supabase-recommended pagination: .range(from, to) with ordered results
+  const from = page * limit;
+  const to = from + limit - 1;
+
+  let query = supabase
     .from("tasks")
     .select("*")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
-    .limit(50);
+    .range(from, to);
 
-  if (error) {
-    return NextResponse.json({ error: "Failed to fetch tasks" }, { status: 500 });
+  if (status && VALID_STATUSES.has(status as TaskStatus)) {
+    query = query.eq("status", status as TaskStatus);
   }
 
-  return NextResponse.json({ tasks: taskList });
+  const { data: rows, error: dbError } = await query;
+
+  if (dbError) {
+    Sentry.captureException(dbError, { extra: { userId: user.id, page, status } });
+    return error("Failed to fetch tasks", 500);
+  }
+
+  const tasks = rows ?? [];
+  // If we got fewer than requested, there are no more pages
+  const hasMore = tasks.length === limit;
+
+  return NextResponse.json({ tasks, hasMore, page });
 }

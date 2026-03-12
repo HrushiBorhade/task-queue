@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { getUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addTaskToQueue } from "@/lib/queue";
@@ -55,6 +56,7 @@ export async function POST(request: Request) {
     .single();
 
   if (batchError || !batch) {
+    Sentry.captureException(batchError, { extra: { userId: user.id, taskCount: items.length } });
     return NextResponse.json({ error: "Failed to create batch" }, { status: 500 });
   }
 
@@ -71,6 +73,7 @@ export async function POST(request: Request) {
     .select();
 
   if (tasksError || !createdTasks) {
+    Sentry.captureException(tasksError, { extra: { batchId: batch.id, taskCount: items.length } });
     return NextResponse.json({ error: "Failed to create tasks" }, { status: 500 });
   }
 
