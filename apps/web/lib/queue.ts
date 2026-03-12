@@ -2,8 +2,10 @@ import { Queue } from "bullmq";
 import {
   QUEUE_CONFIGS,
   REDIS_CONNECTION,
+  SCHEDULER_QUEUE,
   type TaskType,
   type TaskJobPayload,
+  type ScheduleJobPayload,
 } from "@repo/shared";
 
 const queues = new Map<string, Queue>();
@@ -28,4 +30,15 @@ export async function addTaskToQueue(payload: TaskJobPayload): Promise<string> {
   });
   if (!job.id) throw new Error(`BullMQ did not return a job ID for task ${payload.taskId}`);
   return job.id;
+}
+
+let schedulerQueue: Queue<ScheduleJobPayload> | null = null;
+
+export function getSchedulerQueue(): Queue<ScheduleJobPayload> {
+  if (!schedulerQueue) {
+    schedulerQueue = new Queue<ScheduleJobPayload>(SCHEDULER_QUEUE, {
+      connection: REDIS_CONNECTION,
+    });
+  }
+  return schedulerQueue;
 }
