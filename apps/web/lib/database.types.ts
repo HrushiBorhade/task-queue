@@ -73,6 +73,7 @@ export type Database = {
           input: Json
           last_run_at: string | null
           name: string
+          run_at: string | null
           run_count: number
           timezone: string
           type: Database["public"]["Enums"]["task_type"]
@@ -87,6 +88,7 @@ export type Database = {
           input?: Json
           last_run_at?: string | null
           name: string
+          run_at?: string | null
           run_count?: number
           timezone?: string
           type: Database["public"]["Enums"]["task_type"]
@@ -101,6 +103,7 @@ export type Database = {
           input?: Json
           last_run_at?: string | null
           name?: string
+          run_at?: string | null
           run_count?: number
           timezone?: string
           type?: Database["public"]["Enums"]["task_type"]
