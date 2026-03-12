@@ -56,6 +56,7 @@ export const schedules = pgTable("schedules", {
   input: jsonb().notNull().default({}),
   cronExpression: text("cron_expression").notNull(),
   timezone: text().notNull().default("UTC"),
+  runAt: timestamp("run_at", { withTimezone: true }),
   enabled: boolean().notNull().default(true),
   runCount: integer("run_count").notNull().default(0),
   lastRunAt: timestamp("last_run_at", { withTimezone: true }),
