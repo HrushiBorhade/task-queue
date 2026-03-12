@@ -5,6 +5,19 @@
     "apps/*",
     "packages/*"
   ],
+  "scripts": {
+    "setup": "supabase start && bun run env:local",
+    "env:local": "bun scripts/gen-env.ts",
+    "dev": "bun run --filter='*' dev",
+    "dev:worker": "bun run --filter=worker dev",
+    "dev:web": "bun run --filter=web dev",
+    "lint": "bun run --filter='*' lint",
+    "typecheck": "bun run --filter='*' typecheck",
+    "check": "bun run lint && bun run typecheck",
+    "db:new": "supabase migration new",
+    "db:push": "supabase db push --local",
+    "db:reset": "supabase db reset --local"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
