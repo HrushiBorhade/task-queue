@@ -7,6 +7,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import { Field, FieldGroup, FieldDescription } from "@/components/ui/field";
 import { useAuth } from "../context";
 import { sendPhoneOtp, verifyPhoneOtp } from "../actions";
 
@@ -63,22 +64,14 @@ export function VerifyOtp() {
   }, [otp, handleVerify]);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <p className="text-xs text-muted-foreground">
-          {sendingOtp ? "Sending code..." : "We sent a code to your phone"}
+    <FieldGroup>
+      <div className="flex flex-col items-center gap-2 text-center">
+        <h1 className="text-2xl font-bold">Verify phone</h1>
+        <p className="text-balance text-muted-foreground">
+          {sendingOtp ? "Sending code..." : <>We sent a 6-digit code to <strong>{emailOrPhone}</strong></>}
         </p>
-        <h1 className="text-lg font-semibold tracking-tight">
-          Verify Your Phone Number
-        </h1>
       </div>
-
-      <div className="rounded-md border bg-muted/50 px-3 py-2 text-center">
-        <p className="text-[10px] text-muted-foreground">We&apos;ve sent a 6 digit code to:</p>
-        <p className="text-xs font-medium">{emailOrPhone}</p>
-      </div>
-
-      <div className="flex flex-col items-center gap-3">
+      <Field className="items-center">
         <InputOTP
           maxLength={OTP_LENGTH}
           value={otp}
@@ -92,30 +85,29 @@ export function VerifyOtp() {
             ))}
           </InputOTPGroup>
         </InputOTP>
-
-        <p className="text-[10px] text-muted-foreground">
-          {countdown > 0 ? (
-            `Resend OTP in ${countdown}s`
-          ) : (
-            <button
-              type="button"
-              onClick={sendOtp}
-              disabled={sendingOtp}
-              className="text-primary underline underline-offset-4 hover:text-primary/80"
-            >
-              Resend OTP
-            </button>
-          )}
-        </p>
-      </div>
-
-      <Button
-        onClick={handleVerify}
-        size="lg"
-        disabled={isPending || otp.length !== OTP_LENGTH}
-      >
-        {isPending ? "Verifying..." : "Verify"}
-      </Button>
-    </div>
+      </Field>
+      <FieldDescription className="text-center">
+        {countdown > 0 ? (
+          `Resend OTP in ${countdown}s`
+        ) : (
+          <button
+            type="button"
+            onClick={sendOtp}
+            disabled={sendingOtp}
+            className="underline underline-offset-4 hover:text-primary"
+          >
+            Resend OTP
+          </button>
+        )}
+      </FieldDescription>
+      <Field>
+        <Button
+          onClick={handleVerify}
+          disabled={isPending || otp.length !== OTP_LENGTH}
+        >
+          {isPending ? "Verifying..." : "Verify"}
+        </Button>
+      </Field>
+    </FieldGroup>
   );
 }

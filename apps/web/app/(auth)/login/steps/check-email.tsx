@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { FieldGroup, FieldDescription } from "@/components/ui/field";
 import { useAuth } from "../context";
 import { resendConfirmationEmail } from "../actions";
 
@@ -23,33 +24,25 @@ export function CheckEmail() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <p className="text-xs text-muted-foreground">Thank you for creating an account!</p>
-        <h1 className="text-lg font-semibold tracking-tight">
-          Check Your Email
-        </h1>
-      </div>
-
-      <div className="rounded-md border bg-muted/50 px-4 py-3 text-center">
-        <p className="text-[10px] text-muted-foreground">We&apos;ve sent an email to:</p>
-        <p className="text-xs font-medium mt-1">{emailOrPhone}</p>
-        <p className="text-[10px] text-muted-foreground mt-1.5">
-          Please check your junk/spam folder
+    <FieldGroup>
+      <div className="flex flex-col items-center gap-2 text-center">
+        <h1 className="text-2xl font-bold">Check your email</h1>
+        <p className="text-balance text-muted-foreground">
+          We&apos;ve sent a confirmation link to
         </p>
+        <p className="font-medium">{emailOrPhone}</p>
       </div>
-
-      <p className="text-[10px] text-center text-muted-foreground">
+      <FieldDescription className="text-center">
         Didn&apos;t receive it?{" "}
         <button
           type="button"
           onClick={handleResend}
           disabled={resending}
-          className="text-primary underline underline-offset-4 hover:text-primary/80 disabled:opacity-50"
+          className="underline underline-offset-4 hover:text-primary disabled:opacity-50"
         >
           {resending ? "Sending..." : resent ? "Sent!" : "Resend email"}
         </button>
-      </p>
-    </div>
+      </FieldDescription>
+    </FieldGroup>
   );
 }

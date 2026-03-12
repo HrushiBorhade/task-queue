@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Field, FieldGroup, FieldLabel, FieldError } from "@/components/ui/field";
 import { useAuth } from "../context";
 import { signUpWithEmail } from "../actions";
 
@@ -41,27 +41,19 @@ export function CreatePassword() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <p className="text-xs text-muted-foreground">Looks like it&apos;s your first time here!</p>
-        <h1 className="text-lg font-semibold tracking-tight">
-          Create Your Account
-        </h1>
-      </div>
-
-      <div className="rounded-md border bg-muted/50 px-3 py-2 text-center text-xs font-medium">
-        {emailOrPhone}
-      </div>
-
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSubmit();
-        }}
-        className="flex flex-col gap-3"
-      >
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="password">Password</Label>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleSubmit();
+      }}
+    >
+      <FieldGroup>
+        <div className="flex flex-col items-center gap-2 text-center">
+          <h1 className="text-2xl font-bold">Create account</h1>
+          <p className="text-balance text-muted-foreground">{emailOrPhone}</p>
+        </div>
+        <Field>
+          <FieldLabel htmlFor="password">Password</FieldLabel>
           <Input
             id="password"
             type="password"
@@ -74,36 +66,30 @@ export function CreatePassword() {
             disabled={isPending}
             autoFocus
             minLength={6}
+            required
           />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="confirm-password">Confirm password</Label>
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="confirm-password">Confirm password</FieldLabel>
           <Input
             id="confirm-password"
             type="password"
-            placeholder="Confirm password"
             value={confirmPassword}
             onChange={(e) => {
               setConfirmPassword(e.target.value);
               setValidationError(null);
             }}
             disabled={isPending}
+            required
           />
-        </div>
-
-        {validationError && (
-          <p className="text-[10px] text-destructive">{validationError}</p>
-        )}
-
-        <Button
-          type="submit"
-          size="lg"
-          disabled={isPending || !password || !confirmPassword}
-        >
-          {isPending ? "Creating account..." : "Create account"}
-        </Button>
-      </form>
-    </div>
+        </Field>
+        {validationError && <FieldError>{validationError}</FieldError>}
+        <Field>
+          <Button type="submit" disabled={isPending || !password || !confirmPassword}>
+            {isPending ? "Creating account..." : "Create account"}
+          </Button>
+        </Field>
+      </FieldGroup>
+    </form>
   );
 }

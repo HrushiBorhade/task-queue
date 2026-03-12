@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Field, FieldGroup } from "@/components/ui/field";
 import { GoogleLogo } from "@phosphor-icons/react";
 import { useAuth } from "../context";
 import { signInWithGoogle } from "../actions";
@@ -33,32 +34,20 @@ export function OAuthUser() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <p className="text-xs text-muted-foreground">Welcome back!</p>
-        <h1 className="text-lg font-semibold tracking-tight">
-          You signed up with {providerLabel}
-        </h1>
-      </div>
-
-      <div className="rounded-md border bg-muted/50 px-4 py-3 text-center">
-        <p className="text-[10px] text-muted-foreground">
-          The account associated with
-        </p>
-        <p className="text-xs font-medium mt-1">{emailOrPhone}</p>
-        <p className="text-[10px] text-muted-foreground mt-1.5">
-          was created using {providerLabel}. Sign in with {providerLabel} to continue.
+    <FieldGroup>
+      <div className="flex flex-col items-center gap-2 text-center">
+        <h1 className="text-2xl font-bold">Welcome back</h1>
+        <p className="text-balance text-muted-foreground">
+          <strong>{emailOrPhone}</strong> was created using {providerLabel}.
+          Sign in with {providerLabel} to continue.
         </p>
       </div>
-
-      <Button
-        onClick={handleContinueWithProvider}
-        size="lg"
-        disabled={isPending}
-      >
-        {supported?.icon}
-        {isPending ? "Redirecting..." : `Continue with ${providerLabel}`}
-      </Button>
-    </div>
+      <Field>
+        <Button onClick={handleContinueWithProvider} disabled={isPending}>
+          {supported?.icon}
+          {isPending ? "Redirecting..." : `Continue with ${providerLabel}`}
+        </Button>
+      </Field>
+    </FieldGroup>
   );
 }

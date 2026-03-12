@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { useAuth } from "../context";
 import { signInWithPassword, resetPasswordForEmail, checkUserExists } from "../actions";
 
@@ -49,41 +49,32 @@ export function EnterPassword() {
   const busy = isPending || resetPending;
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <p className="text-xs text-muted-foreground">Welcome back!</p>
-        <h1 className="text-lg font-semibold tracking-tight">
-          Enter Your Password
-        </h1>
-      </div>
-
-      <div className="rounded-md border bg-muted/50 px-3 py-2 text-center text-xs font-medium">
-        {emailOrPhone}
-      </div>
-
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSubmit();
-        }}
-        className="flex flex-col gap-3"
-      >
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleSubmit();
+      }}
+    >
+      <FieldGroup>
+        <div className="flex flex-col items-center gap-2 text-center">
+          <h1 className="text-2xl font-bold">Welcome back</h1>
+          <p className="text-balance text-muted-foreground">{emailOrPhone}</p>
+        </div>
+        <Field>
+          <div className="flex items-center">
+            <FieldLabel htmlFor="password">Password</FieldLabel>
             <button
               type="button"
               onClick={handleForgotPassword}
               disabled={busy}
-              className="text-[10px] text-primary underline underline-offset-4 hover:text-primary/80 disabled:opacity-50"
+              className="ml-auto text-sm underline-offset-2 hover:underline disabled:opacity-50"
             >
-              {resetPending ? "Sending..." : "Forgot password?"}
+              {resetPending ? "Sending..." : "Forgot your password?"}
             </button>
           </div>
           <Input
             id="password"
             type="password"
-            placeholder="Enter your password"
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
@@ -91,17 +82,15 @@ export function EnterPassword() {
             }}
             disabled={busy}
             autoFocus
+            required
           />
-        </div>
-
-        <Button
-          type="submit"
-          size="lg"
-          disabled={busy || !password}
-        >
-          {isPending ? "Signing in..." : "Sign in"}
-        </Button>
-      </form>
-    </div>
+        </Field>
+        <Field>
+          <Button type="submit" disabled={busy || !password}>
+            {isPending ? "Signing in..." : "Login"}
+          </Button>
+        </Field>
+      </FieldGroup>
+    </form>
   );
 }

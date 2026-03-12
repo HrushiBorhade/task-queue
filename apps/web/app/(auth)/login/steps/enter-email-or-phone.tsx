@@ -3,8 +3,13 @@
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+  FieldSeparator,
+  FieldDescription,
+} from "@/components/ui/field";
 import { GoogleLogo } from "@phosphor-icons/react";
 import { useAuth } from "../context";
 import { checkUserExists, signInWithGoogle } from "../actions";
@@ -50,61 +55,50 @@ export function EnterEmailOrPhone() {
   const busy = isPending || googlePending;
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-lg font-semibold tracking-tight">
-          Sign in or Create account
-        </h1>
-        <p className="text-xs text-muted-foreground">
-          Enter your email or phone number to get started.
-        </p>
-      </div>
-
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleContinue();
-        }}
-        className="flex flex-col gap-3"
-      >
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="email-or-phone" className="sr-only">
-            Email or phone number
-          </Label>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleContinue();
+      }}
+    >
+      <FieldGroup>
+        <div className="flex flex-col items-center gap-2 text-center">
+          <h1 className="text-2xl font-bold">Welcome</h1>
+          <p className="text-balance text-muted-foreground">
+            Sign in or create your Task Queue account
+          </p>
+        </div>
+        <Field>
+          <FieldLabel htmlFor="email-or-phone">Email or phone</FieldLabel>
           <Input
             id="email-or-phone"
-            placeholder="Email or phone number"
+            placeholder="m@example.com"
             value={emailOrPhone}
             onChange={(e) => setEmailOrPhone(e.target.value)}
             disabled={busy}
             autoFocus
           />
-        </div>
-
-        <Button
-          type="submit"
-          size="lg"
-          disabled={busy || !emailOrPhone.trim()}
-        >
-          {isPending ? "Checking..." : "Continue"}
-        </Button>
-      </form>
-
-      <div className="flex items-center gap-3">
-        <Separator className="flex-1" />
-        <span className="text-muted-foreground text-[10px] uppercase tracking-wider">or</span>
-        <Separator className="flex-1" />
-      </div>
-
-      <Button
-        variant="outline"
-        size="lg"
-        onClick={handleGoogle}
-        disabled={busy}
-      >
-        <GoogleLogo data-icon="inline-start" weight="bold" />
-        Continue with Google
-      </Button>
-    </div>
+        </Field>
+        <Field>
+          <Button type="submit" disabled={busy || !emailOrPhone.trim()}>
+            {isPending ? "Checking..." : "Continue"}
+          </Button>
+        </Field>
+        <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
+          Or continue with
+        </FieldSeparator>
+        <Field>
+          <Button
+            variant="outline"
+            type="button"
+            onClick={handleGoogle}
+            disabled={busy}
+          >
+            <GoogleLogo data-icon="inline-start" weight="bold" />
+            Google
+          </Button>
+        </Field>
+      </FieldGroup>
+    </form>
   );
 }
