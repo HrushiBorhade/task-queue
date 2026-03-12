@@ -144,8 +144,8 @@ const TaskRow = memo(function TaskRow({ task }: { task: Tables<"tasks"> }) {
           )}
         </TableCell>
 
-        {/* Time */}
-        <TableCell className="text-right text-muted-foreground">
+        {/* Time — suppressHydrationWarning because Date.now() differs server vs client */}
+        <TableCell className="text-right text-muted-foreground" suppressHydrationWarning>
           {timeAgo(task.updated_at ?? task.created_at)}
         </TableCell>
       </TableRow>

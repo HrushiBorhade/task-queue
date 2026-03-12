@@ -178,7 +178,7 @@ export function ScheduleList() {
                       </>
                     )}
                     <span>{schedule.run_count} runs</span>
-                    <span>Last: {formatRelative(schedule.last_run_at)}</span>
+                    <span suppressHydrationWarning>Last: {formatRelative(schedule.last_run_at)}</span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1 truncate">
                     {(schedule.input as { prompt?: string })?.prompt}
