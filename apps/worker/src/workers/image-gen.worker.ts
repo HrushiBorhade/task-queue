@@ -5,22 +5,17 @@ import type { TaskJobPayload } from "@repo/shared";
 import { db } from "../lib/db";
 import { supabase } from "../lib/supabase";
 import { ProgressTracker } from "../utils/progress";
-import { createLogger } from "../lib/logger";
 
-const log = createLogger({ module: "text-gen" });
+export function createImageGenWorker() {
+  const config = QUEUE_CONFIGS.image_gen;
 
-export function createTextGenWorker() {
-  const config = QUEUE_CONFIGS.text_gen;
-
-  const worker = new Worker<TaskJobPayload>(
+  return new Worker<TaskJobPayload>(
     config.name,
     async (job) => {
       const { taskId, userId, input } = job.data;
-      let batchId: string | null = null;
       const tracker = new ProgressTracker(taskId, userId);
 
       try {
-        // 1. Mark active in DB
         const [task] = await db
           .update(tasks)
           .set({
@@ -32,22 +27,16 @@ export function createTextGenWorker() {
           .where(eq(tasks.id, taskId))
           .returning();
 
-        batchId = task?.batchId ?? null;
+        const batchId = task?.batchId ?? null;
 
-        // 2. Simulate text generation
-        await tracker.broadcastStep("Starting text generation");
-        tracker.updateProgress(10, "Initializing");
+        await tracker.broadcastStep("Starting image generation");
+        tracker.updateProgress(20);
 
-        log.info({ taskId, prompt: input.prompt }, "Processing");
-        await new Promise((resolve) => setTimeout(resolve, 1_000));
-        tracker.updateProgress(50, "Generating text");
+        await new Promise((r) => setTimeout(r, 3_000));
+        tracker.updateProgress(80);
 
-        await new Promise((resolve) => setTimeout(resolve, 1_000));
-        tracker.updateProgress(90, "Finalizing");
+        const result = `https://placeholder.example/generated-${taskId}.png`;
 
-        const result = `Generated text for: ${input.prompt}`;
-
-        // 3. Mark completed in DB
         await db
           .update(tasks)
           .set({
@@ -58,7 +47,6 @@ export function createTextGenWorker() {
           })
           .where(eq(tasks.id, taskId));
 
-        // 4. Increment batch counter if part of a batch
         if (batchId) {
           await supabase.rpc("increment_batch_completed", {
             p_batch_id: batchId,
@@ -67,7 +55,6 @@ export function createTextGenWorker() {
 
         return { result };
       } catch (error) {
-        // Mark failed in DB
         await db
           .update(tasks)
           .set({
@@ -76,16 +63,8 @@ export function createTextGenWorker() {
           })
           .where(eq(tasks.id, taskId));
 
-        // Increment batch even on failure (for progress tracking)
-        if (batchId) {
-          await supabase.rpc("increment_batch_completed", {
-            p_batch_id: batchId,
-          });
-        }
-
-        throw error; // Re-throw so BullMQ retries
+        throw error;
       } finally {
-        // ALWAYS cleanup — prevents channel leaks
         await tracker.destroy();
       }
     },
@@ -95,10 +74,4 @@ export function createTextGenWorker() {
       limiter: config.rateLimit,
     },
   );
-
-  worker.on("error", (err) => {
-    log.error({ err }, "Worker error");
-  });
-
-  return worker;
 }
