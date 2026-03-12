@@ -26,7 +26,16 @@ createBullBoard({
 });
 
 const app = new Hono();
-app.route("/admin/queues", serverAdapter.registerPlugin());
+const boardPlugin = serverAdapter.registerPlugin();
+app.route("/admin/queues", boardPlugin);
+
+// SPA fallback: serve the index HTML for any unmatched sub-paths so
+// client-side routing works (e.g. /admin/queues/queue/text-gen?status=active)
+app.all("/admin/queues/*", (c) => {
+  const url = new URL(c.req.url);
+  url.pathname = "/admin/queues";
+  return app.fetch(new Request(url.toString(), c.req.raw));
+});
 
 let server: ReturnType<typeof Bun.serve> | null = null;
 

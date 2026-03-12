@@ -5,6 +5,8 @@ import { createLogger } from "./lib/logger";
 const log = createLogger({ module: "health" });
 
 const HEALTH_PORT = Number(process.env.HEALTH_PORT ?? 9090);
+const HEALTH_TIMEOUT_MS = 5_000;
+
 const pingQueue = new Queue("_health", {
   connection: REDIS_CONNECTION,
 });
@@ -17,7 +19,10 @@ export function startHealthServer(): void {
     fetch: async () => {
       try {
         const client = await pingQueue.client;
-        await client.ping();
+        const timeout = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Health check timeout")), HEALTH_TIMEOUT_MS),
+        );
+        await Promise.race([client.ping(), timeout]);
         return Response.json({ status: "ok" });
       } catch {
         return Response.json(
