@@ -22,8 +22,15 @@ function getQueue(taskType: TaskType): Queue {
   return QueueMap.get(config.name)!;
 }
 
+export async function closeEnqueueQueues() {
+  await Promise.allSettled(
+    Array.from(QueueMap.values()).map((q) => q.close()),
+  );
+  QueueMap.clear();
+}
+
 export async function enqueueTask(payload: TaskJobPayload): Promise<string> {
-  const q = await getQueue(payload.type);
+  const q = getQueue(payload.type);
   const config = QUEUE_CONFIGS[payload.type];
   const job = await q.add(payload.type, payload, {
     attempts: config.retries,
@@ -33,5 +40,6 @@ export async function enqueueTask(payload: TaskJobPayload): Promise<string> {
     },
   });
 
-  return job.id!;
+  if (!job.id) throw new Error(`BullMQ did not return a job ID for task ${payload.taskId}`);
+  return job.id;
 }
