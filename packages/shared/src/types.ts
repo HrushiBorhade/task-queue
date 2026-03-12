@@ -22,8 +22,16 @@ export interface TaskOutput {
 
 export interface TaskJobPayload {
   taskId: string;
-  userId?: string; // optional until Phase 11 (auth)
+  userId: string;
   type: TaskType;
   input: TaskInput;
   attempt: number;
+}
+
+export interface BroadcastEvent {
+  type: "chunk" | "step" | "progress" | "error";
+  message: string;
+  data?: Record<string, unknown>;
+  progress?: number;
+  timestamp: string;
 }
