@@ -7,6 +7,27 @@ export interface QueueConfig {
   retries: number;
 }
 
+/**
+ * Shared worker defaults — prevents stalled jobs from aggressive BullMQ defaults.
+ *
+ * lockDuration:    How long a job lock lives in Redis before expiring.
+ *                  Default 30s is too tight for I/O-heavy workers doing DB + Supabase + Redis.
+ *                  120s gives plenty of headroom.
+ *
+ * stalledInterval: How often workers check for stalled jobs.
+ *                  Default 30s creates false positives under batch load.
+ *                  60s reduces noise while still catching real stalls.
+ *
+ * maxStalledCount: How many times a job can stall before permanent failure.
+ *                  Default 1 means ONE stall = dead. With transient Redis/DB hiccups,
+ *                  3 gives jobs a fair chance to recover.
+ */
+export const WORKER_DEFAULTS = {
+  lockDuration: 120_000,
+  stalledInterval: 60_000,
+  maxStalledCount: 3,
+} as const;
+
 export const QUEUE_CONFIGS = {
   text_gen: {
     name: "text-gen",
@@ -51,6 +72,8 @@ export const QUEUE_CONFIGS = {
     retries: 3,
   },
 } as const satisfies Record<TaskType, QueueConfig>;
+
+export const SCHEDULER_QUEUE = "scheduler";
 
 export const REDIS_CONNECTION = {
   host: process.env.REDIS_HOST ?? "127.0.0.1",
