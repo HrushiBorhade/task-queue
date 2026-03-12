@@ -26,6 +26,7 @@ interface AnalyticsEvents {
   main_tab_changed: { tab: string };
   filter_changed: { filter: string };
   batch_filter_changed: { filter: string };
+  schedule_filter_changed: { filter: string };
   theme_toggled: { theme: string };
   queue_health_viewed: Record<string, never>;
   // ── Image events ──

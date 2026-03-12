@@ -1,16 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "motion/react";
 import cronstrue from "cronstrue";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { CreateScheduleDialog } from "./create-schedule-dialog";
 import { useSchedules, useToggleSchedule, useDeleteSchedule } from "@/hooks/use-schedules";
-import { Plus, Pause, Play, Trash } from "@phosphor-icons/react";
-import { spring } from "@/lib/animations";
+import { Plus, Pause, Play, Trash, CaretUpDown } from "@phosphor-icons/react";
 import { track } from "@/lib/analytics";
 import type { Tables } from "@/lib/database.types";
 
@@ -35,26 +47,32 @@ function formatRelative(dateStr: string | null): string {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
-function ScheduleCardSkeleton() {
+const STATUS_FILTERS = [
+  { value: "all", label: "All" },
+  { value: "active", label: "Active" },
+  { value: "paused", label: "Paused" },
+] as const;
+
+function getScheduleStatus(schedule: Schedule): string {
+  if (schedule.run_at && schedule.run_count > 0) return "ran";
+  return schedule.enabled ? "active" : "paused";
+}
+
+function SkeletonRows({ count = 5 }: { count?: number }) {
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-5 w-16" />
-          </div>
-          <div className="flex items-center gap-1">
-            <Skeleton className="size-8" />
-            <Skeleton className="size-8" />
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Skeleton className="h-3 w-48" />
-        <Skeleton className="mt-1 h-3 w-64" />
-      </CardContent>
-    </Card>
+    <>
+      {Array.from({ length: count }).map((_, i) => (
+        <TableRow key={i}>
+          <TableCell><Skeleton className="h-3.5 w-28" /></TableCell>
+          <TableCell><Skeleton className="h-3.5 w-20" /></TableCell>
+          <TableCell><Skeleton className="h-5 w-14 rounded-full" /></TableCell>
+          <TableCell><Skeleton className="h-3.5 w-36" /></TableCell>
+          <TableCell><Skeleton className="h-3.5 w-8" /></TableCell>
+          <TableCell><Skeleton className="h-3.5 w-14" /></TableCell>
+          <TableCell className="text-right"><Skeleton className="ml-auto h-3.5 w-16" /></TableCell>
+        </TableRow>
+      ))}
+    </>
   );
 }
 
@@ -63,34 +81,18 @@ export function ScheduleList() {
   const toggleSchedule = useToggleSchedule();
   const deleteSchedule = useDeleteSchedule();
   const [createOpen, setCreateOpen] = useState(false);
+  const [filter, setFilter] = useState("all");
 
-  function handleToggle(schedule: Schedule) {
-    toggleSchedule.mutate({ id: schedule.id, enabled: !schedule.enabled });
-  }
+  const filtered = filter === "all"
+    ? schedules
+    : schedules.filter((s) => getScheduleStatus(s) === filter);
 
-  function handleDelete(id: string) {
-    deleteSchedule.mutate(id);
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold">Schedules</h2>
-        </div>
-        <div className="grid gap-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <ScheduleCardSkeleton key={i} />
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const showEmpty = !isLoading && filtered.length === 0;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold">Schedules</h2>
+        <h1 className="text-lg font-semibold">Schedules</h1>
         <Button size="sm" onClick={() => {
           setCreateOpen(true);
           track("schedule_dialog_opened", {});
@@ -100,54 +102,99 @@ export function ScheduleList() {
         </Button>
       </div>
 
-      {schedules.length === 0 && (
-        <motion.div
-          className="flex items-center justify-center rounded-lg border border-dashed p-8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          <p className="text-xs text-muted-foreground">
-            No schedules yet. Create one to run tasks on a cron schedule.
-          </p>
-        </motion.div>
-      )}
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[160px]">Name</TableHead>
+            <TableHead className="w-[100px]">Type</TableHead>
+            <TableHead className="w-[100px]">
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center gap-1 cursor-pointer select-none hover:text-foreground transition-colors -mx-1 px-1 rounded">
+                  Status
+                  {filter !== "all" && (
+                    <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+                      {STATUS_FILTERS.find((f) => f.value === filter)?.label ?? "All"}
+                    </Badge>
+                  )}
+                  <CaretUpDown className="size-3 text-muted-foreground" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuRadioGroup
+                    value={filter}
+                    onValueChange={(v) => {
+                      setFilter(v);
+                      track("schedule_filter_changed", { filter: v });
+                    }}
+                  >
+                    {STATUS_FILTERS.map((f) => (
+                      <DropdownMenuRadioItem key={f.value} value={f.value}>
+                        {f.label}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </TableHead>
+            <TableHead>Schedule</TableHead>
+            <TableHead className="w-[60px]">Runs</TableHead>
+            <TableHead className="w-[100px]">Last Run</TableHead>
+            <TableHead className="w-[80px] text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {isLoading ? (
+            <SkeletonRows />
+          ) : showEmpty ? (
+            <TableRow>
+              <TableCell colSpan={7} className="h-32 text-center">
+                <p className="text-xs text-muted-foreground">
+                  {filter === "all"
+                    ? "No schedules yet. Create one to run tasks on a cron schedule."
+                    : `No ${filter} schedules.`}
+                </p>
+              </TableCell>
+            </TableRow>
+          ) : (
+            filtered.map((schedule) => {
+              const status = getScheduleStatus(schedule);
+              const isOneTimeRan = schedule.run_at && schedule.run_count > 0;
 
-      {schedules.length > 0 && (
-        <div className="grid gap-3">
-          {schedules.map((schedule, i) => (
-            <motion.div
-              key={schedule.id}
-              initial={{ opacity: 0, y: 8, filter: "blur(4px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              transition={{
-                ...spring,
-                delay: Math.min(i * 0.04, 0.3),
-              }}
-            >
-              <Card className={!schedule.enabled ? "opacity-50" : ""}>
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-medium flex items-center gap-2">
-                      {schedule.name}
-                      <Badge variant="secondary">
-                        {schedule.type.replace(/_/g, " ")}
-                      </Badge>
-                      <Badge variant={schedule.enabled ? "default" : "outline"}>
-                        {schedule.run_at && schedule.run_count > 0
-                          ? "Ran"
-                          : schedule.enabled
-                            ? "Active"
-                            : "Paused"}
-                      </Badge>
-                    </CardTitle>
-                    <div className="flex items-center gap-1">
-                      {/* Hide toggle for one-time schedules that already ran */}
-                      {!(schedule.run_at && schedule.run_count > 0) && (
+              return (
+                <TableRow key={schedule.id}>
+                  <TableCell className="font-medium">{schedule.name}</TableCell>
+                  <TableCell>
+                    <span className="text-muted-foreground">{schedule.type.replace(/_/g, " ")}</span>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={status === "active" ? "default" : status === "ran" ? "secondary" : "outline"}>
+                      {status === "ran" ? "Ran" : status === "active" ? "Active" : "Paused"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      {schedule.run_at ? (
+                        <span className="text-xs text-muted-foreground">
+                          Once at {new Date(schedule.run_at).toLocaleString()}
+                        </span>
+                      ) : (
+                        <>
+                          <span className="text-xs text-muted-foreground">{describeCron(schedule.cron_expression)}</span>
+                          <span className="font-mono text-[10px] text-muted-foreground/60">{schedule.cron_expression}</span>
+                        </>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-mono text-muted-foreground">{schedule.run_count}</TableCell>
+                  <TableCell className="text-muted-foreground" suppressHydrationWarning>
+                    {formatRelative(schedule.last_run_at)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      {!isOneTimeRan && (
                         <Button
                           variant="ghost"
                           size="icon-sm"
-                          onClick={() => handleToggle(schedule)}
+                          onClick={() => toggleSchedule.mutate({ id: schedule.id, enabled: !schedule.enabled })}
                           disabled={toggleSchedule.isPending}
                           aria-label={schedule.enabled ? "Pause" : "Resume"}
                         >
@@ -158,37 +205,20 @@ export function ScheduleList() {
                         variant="ghost"
                         size="icon-sm"
                         className="text-destructive hover:text-destructive"
-                        onClick={() => handleDelete(schedule.id)}
+                        onClick={() => deleteSchedule.mutate(schedule.id)}
                         disabled={deleteSchedule.isPending}
                         aria-label="Delete"
                       >
                         <Trash />
                       </Button>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    {schedule.run_at ? (
-                      <span>Once at {new Date(schedule.run_at).toLocaleString()}</span>
-                    ) : (
-                      <>
-                        <span>{describeCron(schedule.cron_expression)}</span>
-                        <span className="font-mono text-[10px] opacity-60">{schedule.cron_expression}</span>
-                      </>
-                    )}
-                    <span>{schedule.run_count} runs</span>
-                    <span suppressHydrationWarning>Last: {formatRelative(schedule.last_run_at)}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1 truncate">
-                    {(schedule.input as { prompt?: string })?.prompt}
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-      )}
+                  </TableCell>
+                </TableRow>
+              );
+            })
+          )}
+        </TableBody>
+      </Table>
 
       <CreateScheduleDialog
         open={createOpen}
