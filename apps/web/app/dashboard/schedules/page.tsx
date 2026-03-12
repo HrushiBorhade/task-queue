@@ -6,9 +6,5 @@ export const metadata: Metadata = {
 };
 
 export default function SchedulesPage() {
-  return (
-    <div className="flex flex-col gap-4">
-      <ScheduleList />
-    </div>
-  );
+  return <ScheduleList />;
 }

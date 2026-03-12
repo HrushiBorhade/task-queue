@@ -157,7 +157,10 @@ export function CreateScheduleDialog({
   const minDatetime = toDatetimeLocal(new Date());
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+    <Dialog open={open} onOpenChange={(o) => {
+      if (o) setRunAtLocal(defaultRunAt());
+      if (!o) onClose();
+    }}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create Schedule</DialogTitle>

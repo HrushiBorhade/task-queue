@@ -2,7 +2,6 @@
 
 import { useRef, useEffect, useState, memo } from "react";
 import type { Tables } from "@/lib/database.types";
-import type { ImageGenOutput } from "@repo/shared";
 import { useTasks } from "@/hooks/use-tasks";
 import {
   Table,
@@ -22,18 +21,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ImageDialog } from "@/components/image-dialog";
-import {
-  SpinnerGap,
-  TextT,
-  Image as ImageIcon,
-  MagnifyingGlass,
-  EnvelopeSimple,
-  FilePdf,
-  WebhooksLogo,
-  ChartBar,
-  CaretUpDown,
-} from "@phosphor-icons/react";
+import { SpinnerGap, CaretUpDown } from "@phosphor-icons/react";
 import { track } from "@/lib/analytics";
+import { timeAgo, formatLabel, getImageOutput, TYPE_ICON, TASK_STATUS_BADGE } from "@/lib/task-utils";
+import { cn } from "@/lib/utils";
 
 /* ── Config ────────────────────────────────────────── */
 
@@ -44,43 +35,6 @@ const FILTERS = [
   { value: "completed", label: "Completed" },
   { value: "failed", label: "Failed" },
 ] as const;
-
-const TYPE_ICON: Record<string, React.ElementType> = {
-  text_gen: TextT,
-  image_gen: ImageIcon,
-  research_agent: MagnifyingGlass,
-  email_campaign: EnvelopeSimple,
-  pdf_report: FilePdf,
-  webhook_processing: WebhooksLogo,
-  data_aggregation: ChartBar,
-};
-
-const STATUS_BADGE: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  queued: "secondary",
-  active: "default",
-  completed: "outline",
-  failed: "destructive",
-};
-
-/* ── Helpers ───────────────────────────────────────── */
-
-function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const s = Math.floor(diff / 1000);
-  if (s < 60) return "just now";
-  const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  return `${Math.floor(h / 24)}d ago`;
-}
-
-function getImageOutput(task: Tables<"tasks">): ImageGenOutput | null {
-  if (task.type !== "image_gen" || task.status !== "completed") return null;
-  const out = task.output as Record<string, unknown> | null;
-  if (!out || typeof out.image_url !== "string") return null;
-  return out as unknown as ImageGenOutput;
-}
 
 /* ── TaskRow (memoized for realtime perf) ──────────── */
 
@@ -95,15 +49,14 @@ const TaskRow = memo(function TaskRow({ task }: { task: Tables<"tasks"> }) {
   return (
     <>
       <TableRow
-        className={isOptimistic ? "opacity-50" : undefined}
+        className={cn(isOptimistic && "opacity-50", imageOutput && "cursor-pointer")}
         onClick={imageOutput ? () => setDialogOpen(true) : undefined}
-        style={imageOutput ? { cursor: "pointer" } : undefined}
       >
         {/* Type */}
         <TableCell>
           <div className="flex items-center gap-1.5">
             {Icon && <Icon className="size-3.5 shrink-0 text-muted-foreground" weight="duotone" />}
-            <span className="text-muted-foreground">{task.type.replace(/_/g, " ")}</span>
+            <span className="text-muted-foreground">{formatLabel(task.type)}</span>
           </div>
         </TableCell>
 
@@ -124,7 +77,7 @@ const TaskRow = memo(function TaskRow({ task }: { task: Tables<"tasks"> }) {
 
         {/* Status */}
         <TableCell>
-          <Badge variant={STATUS_BADGE[task.status] ?? "outline"}>
+          <Badge variant={TASK_STATUS_BADGE[task.status] ?? "outline"}>
             {isActive && <SpinnerGap className="animate-spin" data-icon="inline-start" />}
             {isOptimistic ? "creating..." : task.status}
           </Badge>
@@ -149,7 +102,7 @@ const TaskRow = memo(function TaskRow({ task }: { task: Tables<"tasks"> }) {
           )}
         </TableCell>
 
-        {/* Time — suppressHydrationWarning because Date.now() differs server vs client */}
+        {/* Time */}
         <TableCell className="text-right text-muted-foreground" suppressHydrationWarning>
           {timeAgo(task.updated_at ?? task.created_at)}
         </TableCell>
@@ -194,7 +147,7 @@ export function TaskGrid({
   initialTasks: Tables<"tasks">[];
 }) {
   const [filter, setFilter] = useState("all");
-  const { tasks, isFetchingNextPage, hasNextPage, fetchNextPage, isLoading } =
+  const { tasks, isFetchingNextPage, hasNextPage, fetchNextPage, isLoading, error } =
     useTasks(initialTasks, filter);
 
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -215,7 +168,7 @@ export function TaskGrid({
   }, [hasNextPage, fetchNextPage]);
 
   const activeLabel = FILTERS.find((f) => f.value === filter)?.label ?? "All";
-  const showEmpty = !isLoading && tasks.length === 0;
+  const showEmpty = !isLoading && !error && tasks.length === 0;
 
   return (
     <div className="flex flex-col gap-3">
@@ -226,7 +179,10 @@ export function TaskGrid({
             <TableHead>Prompt</TableHead>
             <TableHead className="w-[100px]">
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-1 cursor-pointer select-none hover:text-foreground transition-colors -mx-1 px-1 rounded">
+                <DropdownMenuTrigger
+                  aria-label="Filter by status"
+                  className="flex items-center gap-1 cursor-pointer select-none hover:text-foreground transition-colors -mx-1 px-1 rounded"
+                >
                   Status
                   {filter !== "all" && (
                     <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
@@ -259,6 +215,14 @@ export function TaskGrid({
         <TableBody>
           {isLoading ? (
             <SkeletonRows />
+          ) : error ? (
+            <TableRow>
+              <TableCell colSpan={5} className="h-32 text-center">
+                <p className="text-xs text-destructive">
+                  {error instanceof Error ? error.message : "Failed to fetch tasks"}
+                </p>
+              </TableCell>
+            </TableRow>
           ) : showEmpty ? (
             <TableRow>
               <TableCell colSpan={5} className="h-32 text-center">

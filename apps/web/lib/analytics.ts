@@ -23,7 +23,6 @@ interface AnalyticsEvents {
   schedule_deleted: { schedule_id: string };
   schedule_dialog_opened: Record<string, never>;
   // ── Navigation / UI ──
-  main_tab_changed: { tab: string };
   filter_changed: { filter: string };
   batch_filter_changed: { filter: string };
   schedule_filter_changed: { filter: string };
@@ -33,8 +32,6 @@ interface AnalyticsEvents {
   image_downloaded: { taskId: string };
   image_shared: { taskId: string; method: "native" | "clipboard" };
   image_dialog_opened: { taskId: string };
-  // ── Engagement ──
-  page_scrolled_to_load_more: { page: number };
   // ── Auth funnel ──
   login_page_viewed: Record<string, never>;
   login_email_submitted: { email_domain: string };

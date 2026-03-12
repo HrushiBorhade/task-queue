@@ -267,6 +267,7 @@ export function useTasks(
     isFetchingNextPage: query.isFetchingNextPage,
     hasNextPage: query.hasNextPage,
     fetchNextPage: query.fetchNextPage,
+    error: query.error,
   };
 }
 

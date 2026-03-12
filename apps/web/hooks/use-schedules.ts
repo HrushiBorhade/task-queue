@@ -44,6 +44,9 @@ export function useToggleSchedule() {
       track("schedule_toggled", { schedule_id: variables.id, enabled: variables.enabled });
       queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all });
     },
+    onError: (err, variables) => {
+      Sentry.captureException(err, { tags: { action: "toggle_schedule" }, extra: { scheduleId: variables.id } });
+    },
   });
 }
 
@@ -56,6 +59,9 @@ export function useDeleteSchedule() {
     onSuccess: (_data, id) => {
       track("schedule_deleted", { schedule_id: id });
       queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all });
+    },
+    onError: (err, id) => {
+      Sentry.captureException(err, { tags: { action: "delete_schedule" }, extra: { scheduleId: id } });
     },
   });
 }

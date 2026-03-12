@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { getUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { BatchesPageClient } from "./client";
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
 
 export default async function BatchesPage() {
   const user = await getUser();
-  if (!user) return null;
+  if (!user) redirect("/login");
 
   const supabase = createAdminClient();
   const { data: batchList } = await supabase

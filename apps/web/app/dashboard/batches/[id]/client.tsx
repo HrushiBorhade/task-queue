@@ -2,7 +2,6 @@
 
 import { memo, useState } from "react";
 import type { Tables } from "@/lib/database.types";
-import type { ImageGenOutput } from "@repo/shared";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -14,51 +13,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ImageDialog } from "@/components/image-dialog";
-import {
-  SpinnerGap,
-  TextT,
-  Image as ImageIcon,
-  MagnifyingGlass,
-  EnvelopeSimple,
-  FilePdf,
-  WebhooksLogo,
-  ChartBar,
-} from "@phosphor-icons/react";
-
-const TYPE_ICON: Record<string, React.ElementType> = {
-  text_gen: TextT,
-  image_gen: ImageIcon,
-  research_agent: MagnifyingGlass,
-  email_campaign: EnvelopeSimple,
-  pdf_report: FilePdf,
-  webhook_processing: WebhooksLogo,
-  data_aggregation: ChartBar,
-};
-
-const STATUS_BADGE: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  queued: "secondary",
-  active: "default",
-  completed: "outline",
-  failed: "destructive",
-};
-
-function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const s = Math.floor(diff / 1000);
-  if (s < 60) return "just now";
-  const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  return `${Math.floor(h / 24)}d ago`;
-}
-
-function getImageOutput(task: Tables<"tasks">): ImageGenOutput | null {
-  if (task.type !== "image_gen" || task.status !== "completed") return null;
-  const out = task.output as Record<string, unknown> | null;
-  if (!out || typeof out.image_url !== "string") return null;
-  return out as unknown as ImageGenOutput;
-}
+import { SpinnerGap } from "@phosphor-icons/react";
+import { timeAgo, formatLabel, getImageOutput, TYPE_ICON, TASK_STATUS_BADGE } from "@/lib/task-utils";
+import { cn } from "@/lib/utils";
 
 const BatchTaskRow = memo(function BatchTaskRow({ task }: { task: Tables<"tasks"> }) {
   const prompt = (task.input as { prompt?: string })?.prompt ?? "";
@@ -71,19 +28,19 @@ const BatchTaskRow = memo(function BatchTaskRow({ task }: { task: Tables<"tasks"
     <>
       <TableRow
         onClick={imageOutput ? () => setDialogOpen(true) : undefined}
-        style={imageOutput ? { cursor: "pointer" } : undefined}
+        className={cn(imageOutput && "cursor-pointer")}
       >
         <TableCell>
           <div className="flex items-center gap-1.5">
             {Icon && <Icon className="size-3.5 shrink-0 text-muted-foreground" weight="duotone" />}
-            <span className="text-muted-foreground">{task.type.replace(/_/g, " ")}</span>
+            <span className="text-muted-foreground">{formatLabel(task.type)}</span>
           </div>
         </TableCell>
         <TableCell className="max-w-[300px]">
           <span className="truncate">{prompt}</span>
         </TableCell>
         <TableCell>
-          <Badge variant={STATUS_BADGE[task.status] ?? "outline"}>
+          <Badge variant={TASK_STATUS_BADGE[task.status] ?? "outline"}>
             {isActive && <SpinnerGap className="animate-spin" data-icon="inline-start" />}
             {task.status}
           </Badge>
@@ -129,7 +86,7 @@ export function BatchDetailClient({ batch, tasks }: Props) {
             Created {timeAgo(batch.created_at)} · {batch.total_tasks} tasks
           </p>
         </div>
-        <Badge variant={STATUS_BADGE[batch.status] ?? "outline"}>
+        <Badge variant={TASK_STATUS_BADGE[batch.status] ?? "outline"}>
           {batch.status}
         </Badge>
       </div>

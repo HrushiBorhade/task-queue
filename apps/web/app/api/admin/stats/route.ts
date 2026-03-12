@@ -4,6 +4,16 @@ import { getUser } from "@/lib/auth";
 import { QUEUE_CONFIGS, REDIS_CONNECTION, SCHEDULER_QUEUE } from "@repo/shared";
 import type { QueueConfig } from "@repo/shared";
 
+const allQueueNames = [
+  ...(Object.values(QUEUE_CONFIGS) as QueueConfig[]).map((c) => c.name),
+  SCHEDULER_QUEUE,
+];
+
+// Singleton Queue instances — reuse connections across requests
+const queues = allQueueNames.map(
+  (name) => new Queue(name, { connection: REDIS_CONNECTION })
+);
+
 export async function GET() {
   let user;
   try {
@@ -18,17 +28,10 @@ export async function GET() {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const allQueueNames = [
-    ...(Object.values(QUEUE_CONFIGS) as QueueConfig[]).map((c) => c.name),
-    SCHEDULER_QUEUE,
-  ];
-
   const stats = await Promise.all(
-    allQueueNames.map(async (name) => {
-      const queue = new Queue(name, { connection: REDIS_CONNECTION });
+    queues.map(async (queue) => {
       const counts = await queue.getJobCounts();
-      await queue.close();
-      return { name, ...counts };
+      return { name: queue.name, ...counts };
     })
   );
 

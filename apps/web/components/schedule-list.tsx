@@ -25,6 +25,7 @@ import { useSchedules, useToggleSchedule, useDeleteSchedule } from "@/hooks/use-
 import { Plus, Pause, Play, Trash, CaretUpDown } from "@phosphor-icons/react";
 import { track } from "@/lib/analytics";
 import type { Tables } from "@/lib/database.types";
+import { timeAgo, formatLabel } from "@/lib/task-utils";
 
 function describeCron(expr: string): string {
   try {
@@ -35,17 +36,6 @@ function describeCron(expr: string): string {
 }
 
 type Schedule = Tables<"schedules">;
-
-function formatRelative(dateStr: string | null): string {
-  if (!dateStr) return "Never";
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 1) return "Just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
-}
 
 const STATUS_FILTERS = [
   { value: "all", label: "All" },
@@ -109,7 +99,7 @@ export function ScheduleList() {
             <TableHead className="w-[100px]">Type</TableHead>
             <TableHead className="w-[100px]">
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-1 cursor-pointer select-none hover:text-foreground transition-colors -mx-1 px-1 rounded">
+                <DropdownMenuTrigger aria-label="Filter by status" className="flex items-center gap-1 cursor-pointer select-none hover:text-foreground transition-colors -mx-1 px-1 rounded">
                   Status
                   {filter !== "all" && (
                     <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
@@ -163,7 +153,7 @@ export function ScheduleList() {
                 <TableRow key={schedule.id}>
                   <TableCell className="font-medium">{schedule.name}</TableCell>
                   <TableCell>
-                    <span className="text-muted-foreground">{schedule.type.replace(/_/g, " ")}</span>
+                    <span className="text-muted-foreground">{formatLabel(schedule.type)}</span>
                   </TableCell>
                   <TableCell>
                     <Badge variant={status === "active" ? "default" : status === "ran" ? "secondary" : "outline"}>
@@ -186,7 +176,7 @@ export function ScheduleList() {
                   </TableCell>
                   <TableCell className="font-mono text-muted-foreground">{schedule.run_count}</TableCell>
                   <TableCell className="text-muted-foreground" suppressHydrationWarning>
-                    {formatRelative(schedule.last_run_at)}
+                    {timeAgo(schedule.last_run_at)}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">

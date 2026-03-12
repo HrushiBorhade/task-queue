@@ -13,6 +13,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { formatLabel } from "@/lib/task-utils";
 
 const BATCH_STATUS_VARIANT: Record<
   string,
@@ -50,7 +51,7 @@ export function BatchProgress({ batch }: { batch: Tables<"batch_runs"> }) {
             )}
             {isOptimistic
               ? "creating..."
-              : batch.status.replace(/_/g, " ")}
+              : formatLabel(batch.status)}
           </Badge>
         </CardAction>
       </CardHeader>

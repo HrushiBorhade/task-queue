@@ -24,6 +24,7 @@ import { TASK_TYPES, type TaskType } from "@repo/shared";
 import { Plus } from "@phosphor-icons/react";
 import { useCreateTask } from "@/hooks/use-tasks";
 import { track } from "@/lib/analytics";
+import { formatLabel } from "@/lib/task-utils";
 
 export function CreateTaskDialog() {
   const [open, setOpen] = useState(false);
@@ -77,7 +78,7 @@ export function CreateTaskDialog() {
                 <SelectContent>
                   {TASK_TYPES.map((t) => (
                     <SelectItem key={t} value={t}>
-                      {t.replace(/_/g, " ")}
+                      {formatLabel(t)}
                     </SelectItem>
                   ))}
                 </SelectContent>

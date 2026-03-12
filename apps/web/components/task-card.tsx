@@ -2,17 +2,7 @@
 
 import { useState } from "react";
 import type { Tables } from "@/lib/database.types";
-import type { ImageGenOutput } from "@repo/shared";
-import {
-  SpinnerGap,
-  TextT,
-  Image as ImageIcon,
-  MagnifyingGlass,
-  EnvelopeSimple,
-  FilePdf,
-  WebhooksLogo,
-  ChartBar,
-} from "@phosphor-icons/react";
+import { SpinnerGap } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -25,45 +15,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { ImageDialog } from "./image-dialog";
-
-/* ── Config ────────────────────────────────────────── */
-
-const TYPE_ICON: Record<string, React.ElementType> = {
-  text_gen: TextT,
-  image_gen: ImageIcon,
-  research_agent: MagnifyingGlass,
-  email_campaign: EnvelopeSimple,
-  pdf_report: FilePdf,
-  webhook_processing: WebhooksLogo,
-  data_aggregation: ChartBar,
-};
-
-const STATUS_BADGE: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  queued: "secondary",
-  active: "default",
-  completed: "outline",
-  failed: "destructive",
-};
-
-/* ── Helpers ───────────────────────────────────────── */
-
-function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const s = Math.floor(diff / 1000);
-  if (s < 60) return "just now";
-  const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h`;
-  return `${Math.floor(h / 24)}d`;
-}
-
-function getImageOutput(task: Tables<"tasks">): ImageGenOutput | null {
-  if (task.type !== "image_gen" || task.status !== "completed") return null;
-  const out = task.output as Record<string, unknown> | null;
-  if (!out || typeof out.image_url !== "string") return null;
-  return out as unknown as ImageGenOutput;
-}
+import { timeAgo, formatLabel, getImageOutput, TYPE_ICON, TASK_STATUS_BADGE } from "@/lib/task-utils";
 
 /* ── TaskCard ──────────────────────────────────────── */
 
@@ -99,10 +51,10 @@ export function TaskCard({ task }: { task: Tables<"tasks"> }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
             {Icon && <Icon className="size-3.5 shrink-0" weight="duotone" />}
-            {task.type.replace(/_/g, " ")}
+            {formatLabel(task.type)}
           </CardTitle>
           <CardAction>
-            <Badge variant={STATUS_BADGE[task.status] ?? "outline"}>
+            <Badge variant={TASK_STATUS_BADGE[task.status] ?? "outline"}>
               {isActive && (
                 <SpinnerGap className="animate-spin" data-icon="inline-start" />
               )}
@@ -118,7 +70,6 @@ export function TaskCard({ task }: { task: Tables<"tasks"> }) {
         </CardContent>
 
         <CardFooter className="mt-auto">
-          {/* Active: thin inline progress track */}
           {isActive && (
             <div className="mr-3 h-1 flex-1 overflow-hidden rounded-full bg-muted">
               <div
@@ -128,7 +79,7 @@ export function TaskCard({ task }: { task: Tables<"tasks"> }) {
             </div>
           )}
 
-          <span className="ml-auto text-[10px] text-muted-foreground">
+          <span className="ml-auto text-[10px] text-muted-foreground" suppressHydrationWarning>
             {timeAgo(task.updated_at ?? task.created_at)}
           </span>
         </CardFooter>

@@ -26,6 +26,7 @@ import { useCreateBatch } from "@/hooks/use-tasks";
 import { useBatches } from "@/hooks/use-batches";
 import { TASK_TYPES, type TaskType } from "@repo/shared";
 import { track } from "@/lib/analytics";
+import { timeAgo } from "@/lib/task-utils";
 
 const SAMPLE_PROMPTS: Record<TaskType, string[]> = {
   text_gen: [
@@ -80,17 +81,6 @@ const STATUS_BADGE: Record<string, "default" | "secondary" | "destructive" | "ou
   completed: "outline",
   failed: "destructive",
 };
-
-function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const s = Math.floor(diff / 1000);
-  if (s < 60) return "just now";
-  const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  return `${Math.floor(h / 24)}d ago`;
-}
 
 interface Props {
   initialBatches: Tables<"batch_runs">[];
@@ -153,7 +143,7 @@ export function BatchesPageClient({ initialBatches }: Props) {
             <TableHead className="w-[200px]">Batch ID</TableHead>
             <TableHead className="w-[100px]">
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-1 cursor-pointer select-none hover:text-foreground transition-colors -mx-1 px-1 rounded">
+                <DropdownMenuTrigger aria-label="Filter by status" className="flex items-center gap-1 cursor-pointer select-none hover:text-foreground transition-colors -mx-1 px-1 rounded">
                   Status
                   {batchFilter !== "all" && (
                     <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
