@@ -1,5 +1,8 @@
 import { createClient, type RealtimeChannel } from "@supabase/supabase-js";
 import type { BroadcastEvent } from "@repo/shared";
+import { createLogger } from "./logger";
+
+const log = createLogger({ module: "supabase" });
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -22,18 +25,26 @@ export function broadcastTaskEvent(
   taskId: string,
   event: BroadcastEvent,
 ): void {
-  const channel = getChannel(taskId);
-  channel.send({
-    type: "broadcast",
-    event: "task-event",
-    payload: event,
-  });
+  try {
+    const channel = getChannel(taskId);
+    channel.send({
+      type: "broadcast",
+      event: "task-event",
+      payload: event,
+    });
+  } catch (err) {
+    log.error({ taskId, eventType: event.type, err }, "Failed to broadcast task event");
+  }
 }
 
 export function cleanupTaskChannel(taskId: string): void {
   const channel = TaskChannelMap.get(taskId);
   if (channel) {
-    supabase.removeChannel(channel);
+    try {
+      supabase.removeChannel(channel);
+    } catch (err) {
+      log.error({ taskId, err }, "Failed to remove Supabase channel");
+    }
     TaskChannelMap.delete(taskId);
   }
 }
