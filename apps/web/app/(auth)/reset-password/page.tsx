@@ -29,8 +29,8 @@ export default function ResetPasswordPage() {
 
   if (!sessionChecked) {
     return (
-      <div className="w-full max-w-md mx-auto">
-        <p className="text-muted-foreground text-center">Verifying your reset link...</p>
+      <div className="w-full max-w-sm mx-auto">
+        <p className="text-xs text-muted-foreground text-center">Verifying your reset link...</p>
       </div>
     );
   }
@@ -58,25 +58,24 @@ export default function ResetPasswordPage() {
 
   if (success) {
     return (
-      <div className="w-full max-w-md mx-auto">
-        <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-right-4 duration-300">
-          <div className="flex flex-col gap-2">
-            <p className="text-muted-foreground">All done!</p>
-            <h1 className="text-3xl font-bold tracking-tight">
-              Password <span className="text-primary">Reset Successfully</span>
+      <div className="w-full max-w-sm mx-auto">
+        <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="flex flex-col gap-1">
+            <p className="text-xs text-muted-foreground">All done!</p>
+            <h1 className="text-lg font-semibold tracking-tight">
+              Password Reset Successfully
             </h1>
           </div>
 
-          <div className="rounded-xl border bg-muted/50 px-6 py-5 text-center">
-            <p className="text-sm text-muted-foreground">
-              Your password has been updated. You can now sign in with your new
-              password.
+          <div className="rounded-md border bg-muted/50 px-4 py-3 text-center">
+            <p className="text-[10px] text-muted-foreground">
+              Your password has been updated. You can now sign in with your new password.
             </p>
           </div>
 
           <Button
             onClick={() => router.push("/login")}
-            className="h-12 text-base font-semibold"
+            size="lg"
           >
             Go to sign in
           </Button>
@@ -86,17 +85,17 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-right-4 duration-300">
-        <div className="flex flex-col gap-2">
-          <p className="text-muted-foreground">Almost there!</p>
-          <h1 className="text-3xl font-bold tracking-tight">
-            <span className="text-primary">Reset</span> Your Password
+    <div className="w-full max-w-sm mx-auto">
+      <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-right-4 duration-300">
+        <div className="flex flex-col gap-1">
+          <p className="text-xs text-muted-foreground">Almost there!</p>
+          <h1 className="text-lg font-semibold tracking-tight">
+            Reset Your Password
           </h1>
         </div>
 
         {error && (
-          <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-[10px] text-destructive animate-in fade-in slide-in-from-top-1 duration-200">
             {error}
           </div>
         )}
@@ -106,9 +105,9 @@ export default function ResetPasswordPage() {
             e.preventDefault();
             handleSubmit();
           }}
-          className="flex flex-col gap-4"
+          className="flex flex-col gap-3"
         >
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="new-password">New password</Label>
             <Input
               id="new-password"
@@ -121,11 +120,10 @@ export default function ResetPasswordPage() {
               }}
               disabled={isPending}
               autoFocus
-              className="h-12 text-base"
             />
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="confirm-password">Confirm password</Label>
             <Input
               id="confirm-password"
@@ -137,14 +135,13 @@ export default function ResetPasswordPage() {
                 setError(null);
               }}
               disabled={isPending}
-              className="h-12 text-base"
             />
           </div>
 
           <Button
             type="submit"
+            size="lg"
             disabled={isPending || !password || !confirmPassword}
-            className="h-12 text-base font-semibold"
           >
             {isPending ? "Updating..." : "Reset password"}
           </Button>

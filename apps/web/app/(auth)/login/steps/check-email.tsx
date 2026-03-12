@@ -23,23 +23,23 @@ export function CheckEmail() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-2">
-        <p className="text-muted-foreground">Thank you for creating an account!</p>
-        <h1 className="text-3xl font-bold tracking-tight">
-          <span className="text-primary">Check Your Email</span> For The Next Steps!
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1">
+        <p className="text-xs text-muted-foreground">Thank you for creating an account!</p>
+        <h1 className="text-lg font-semibold tracking-tight">
+          Check Your Email
         </h1>
       </div>
 
-      <div className="rounded-xl border bg-muted/50 px-6 py-5 text-center">
-        <p className="text-sm text-muted-foreground">We&apos;ve sent an email to:</p>
-        <p className="font-medium mt-1">{emailOrPhone}</p>
-        <p className="text-sm text-muted-foreground mt-2">
+      <div className="rounded-md border bg-muted/50 px-4 py-3 text-center">
+        <p className="text-[10px] text-muted-foreground">We&apos;ve sent an email to:</p>
+        <p className="text-xs font-medium mt-1">{emailOrPhone}</p>
+        <p className="text-[10px] text-muted-foreground mt-1.5">
           Please check your junk/spam folder
         </p>
       </div>
 
-      <p className="text-sm text-center text-muted-foreground">
+      <p className="text-[10px] text-center text-muted-foreground">
         Didn&apos;t receive it?{" "}
         <button
           type="button"

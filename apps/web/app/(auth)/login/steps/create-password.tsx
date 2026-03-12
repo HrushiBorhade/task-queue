@@ -41,15 +41,15 @@ export function CreatePassword() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-2">
-        <p className="text-muted-foreground">Look&apos;s like it&apos;s your first time here!</p>
-        <h1 className="text-3xl font-bold tracking-tight">
-          <span className="text-primary">Add A Password</span> To Create Your Account
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1">
+        <p className="text-xs text-muted-foreground">Looks like it&apos;s your first time here!</p>
+        <h1 className="text-lg font-semibold tracking-tight">
+          Create Your Account
         </h1>
       </div>
 
-      <div className="rounded-xl border bg-muted/50 px-4 py-3 text-center text-sm font-medium">
+      <div className="rounded-md border bg-muted/50 px-3 py-2 text-center text-xs font-medium">
         {emailOrPhone}
       </div>
 
@@ -58,14 +58,14 @@ export function CreatePassword() {
           e.preventDefault();
           handleSubmit();
         }}
-        className="flex flex-col gap-4"
+        className="flex flex-col gap-3"
       >
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1.5">
           <Label htmlFor="password">Password</Label>
           <Input
             id="password"
             type="password"
-            placeholder="Enter password"
+            placeholder="At least 6 characters"
             value={password}
             onChange={(e) => {
               setLocalPassword(e.target.value);
@@ -73,12 +73,11 @@ export function CreatePassword() {
             }}
             disabled={isPending}
             autoFocus
-            className="h-12 text-base"
             minLength={6}
           />
         </div>
 
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1.5">
           <Label htmlFor="confirm-password">Confirm password</Label>
           <Input
             id="confirm-password"
@@ -90,18 +89,17 @@ export function CreatePassword() {
               setValidationError(null);
             }}
             disabled={isPending}
-            className="h-12 text-base"
           />
         </div>
 
         {validationError && (
-          <p className="text-sm text-destructive">{validationError}</p>
+          <p className="text-[10px] text-destructive">{validationError}</p>
         )}
 
         <Button
           type="submit"
+          size="lg"
           disabled={isPending || !password || !confirmPassword}
-          className="h-12 text-base font-semibold"
         >
           {isPending ? "Creating account..." : "Create account"}
         </Button>

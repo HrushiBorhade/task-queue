@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "@phosphor-icons/react";
+import { Button } from "@/components/ui/button";
 import { AuthProvider, useAuth } from "./context";
 import { EnterEmailOrPhone } from "./steps/enter-email-or-phone";
 import { CreatePassword } from "./steps/create-password";
@@ -16,20 +17,21 @@ function StepRenderer() {
   const { step, goBack, error } = useAuth();
 
   return (
-    <div className="w-full max-w-md mx-auto">
+    <div className="w-full max-w-sm mx-auto">
       {STEPS_WITH_BACK.has(step) && (
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon-sm"
           onClick={goBack}
-          className="mb-8 p-2 -ml-2 rounded-lg hover:bg-muted transition-colors"
+          className="mb-6 -ml-1"
           aria-label="Go back"
         >
-          <ArrowLeft className="size-5" />
-        </button>
+          <ArrowLeft />
+        </Button>
       )}
 
       {error && (
-        <div className="mb-6 rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive animate-in fade-in slide-in-from-top-1 duration-200">
+        <div className="mb-4 rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-[10px] text-destructive animate-in fade-in slide-in-from-top-1 duration-200">
           {error}
         </div>
       )}

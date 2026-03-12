@@ -33,12 +33,10 @@ export function VerifyOtp() {
     }
   }, [emailOrPhone, setError]);
 
-  // Send OTP on mount
   useEffect(() => {
     sendOtp();
   }, [sendOtp]);
 
-  // Countdown timer
   useEffect(() => {
     if (countdown <= 0) return;
     const timer = setInterval(() => setCountdown((c) => c - 1), 1000);
@@ -58,7 +56,6 @@ export function VerifyOtp() {
     });
   }, [otp, emailOrPhone, setError]);
 
-  // Auto-submit when all digits entered
   useEffect(() => {
     if (otp.length === OTP_LENGTH) {
       handleVerify();
@@ -66,22 +63,22 @@ export function VerifyOtp() {
   }, [otp, handleVerify]);
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-2">
-        <p className="text-muted-foreground">
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1">
+        <p className="text-xs text-muted-foreground">
           {sendingOtp ? "Sending code..." : "We sent a code to your phone"}
         </p>
-        <h1 className="text-3xl font-bold tracking-tight">
-          Verify Your <span className="text-primary">Phone Number</span>
+        <h1 className="text-lg font-semibold tracking-tight">
+          Verify Your Phone Number
         </h1>
       </div>
 
-      <div className="rounded-xl border bg-muted/50 px-4 py-3 text-center">
-        <p className="text-sm text-muted-foreground">We&apos;ve sent a 6 digit code to:</p>
-        <p className="font-medium">{emailOrPhone}</p>
+      <div className="rounded-md border bg-muted/50 px-3 py-2 text-center">
+        <p className="text-[10px] text-muted-foreground">We&apos;ve sent a 6 digit code to:</p>
+        <p className="text-xs font-medium">{emailOrPhone}</p>
       </div>
 
-      <div className="flex flex-col items-center gap-4">
+      <div className="flex flex-col items-center gap-3">
         <InputOTP
           maxLength={OTP_LENGTH}
           value={otp}
@@ -91,14 +88,14 @@ export function VerifyOtp() {
         >
           <InputOTPGroup>
             {Array.from({ length: OTP_LENGTH }).map((_, i) => (
-              <InputOTPSlot key={i} index={i} className="size-12 text-lg" />
+              <InputOTPSlot key={i} index={i} />
             ))}
           </InputOTPGroup>
         </InputOTP>
 
-        <p className="text-sm text-muted-foreground">
+        <p className="text-[10px] text-muted-foreground">
           {countdown > 0 ? (
-            `Resend OTP in ${countdown} seconds`
+            `Resend OTP in ${countdown}s`
           ) : (
             <button
               type="button"
@@ -114,8 +111,8 @@ export function VerifyOtp() {
 
       <Button
         onClick={handleVerify}
+        size="lg"
         disabled={isPending || otp.length !== OTP_LENGTH}
-        className="h-12 text-base font-semibold"
       >
         {isPending ? "Verifying..." : "Verify"}
       </Button>
