@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { QueryProvider } from "@/components/providers/query";
 import { PostHogProvider } from "@/components/providers/posthog";
 import { ClarityProvider } from "@/components/providers/clarity";
 import { ThemeProvider } from "@/components/providers/theme";
@@ -35,13 +36,15 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ThemeProvider>
-          <PostHogProvider>
-            <ClarityProvider>
-              {children}
-            </ClarityProvider>
-          </PostHogProvider>
-        </ThemeProvider>
+        <QueryProvider>
+          <ThemeProvider>
+            <PostHogProvider>
+              <ClarityProvider>
+                {children}
+              </ClarityProvider>
+            </PostHogProvider>
+          </ThemeProvider>
+        </QueryProvider>
         <Analytics />
         <SpeedInsights />
       </body>
