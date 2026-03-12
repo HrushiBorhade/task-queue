@@ -21,24 +21,30 @@ interface QueueSnapshot {
 const alertCooldowns = new Map<string, number>();
 const previousSnapshots = new Map<string, QueueSnapshot>();
 
-async function getQueueSnapshot(name: string): Promise<QueueSnapshot> {
-  const queue = new Queue(name, { connection: REDIS_CONNECTION });
-  try {
-    const counts = await queue.getJobCounts(
-      "waiting", "active", "completed", "failed", "delayed", "paused",
-    );
-    return {
-      name,
-      waiting: counts.waiting ?? 0,
-      active: counts.active ?? 0,
-      completed: counts.completed ?? 0,
-      failed: counts.failed ?? 0,
-      delayed: counts.delayed ?? 0,
-      paused: counts.paused ?? 0,
-    };
-  } finally {
-    await queue.close();
+// Reuse queue connections instead of creating new ones each check
+const alertQueues = new Map<string, Queue>();
+
+function getAlertQueue(name: string): Queue {
+  if (!alertQueues.has(name)) {
+    alertQueues.set(name, new Queue(name, { connection: REDIS_CONNECTION }));
   }
+  return alertQueues.get(name)!;
+}
+
+async function getQueueSnapshot(name: string): Promise<QueueSnapshot> {
+  const queue = getAlertQueue(name);
+  const counts = await queue.getJobCounts(
+    "waiting", "active", "completed", "failed", "delayed", "paused",
+  );
+  return {
+    name,
+    waiting: counts.waiting ?? 0,
+    active: counts.active ?? 0,
+    completed: counts.completed ?? 0,
+    failed: counts.failed ?? 0,
+    delayed: counts.delayed ?? 0,
+    paused: counts.paused ?? 0,
+  };
 }
 
 function sendAlert(title: string, details: string, severity: "warning" | "critical"): void {
@@ -98,14 +104,15 @@ async function checkQueues(): Promise<void> {
       );
     }
 
-    if (previous && snapshot.waiting > 0) {
+    // Zero throughput: jobs waiting but NONE active and no completions/failures
+    if (previous && snapshot.waiting > 0 && snapshot.active === 0) {
       const throughput =
         (snapshot.completed - previous.completed) +
         (snapshot.failed - previous.failed);
       if (throughput === 0) {
         sendAlert(
           `Zero throughput: ${config.name}`,
-          `${snapshot.waiting} jobs waiting but no progress`,
+          `${snapshot.waiting} jobs waiting, 0 active, no progress`,
           "critical",
         );
       }
@@ -130,4 +137,9 @@ export function stopAlerting(): void {
     clearInterval(timer);
     timer = null;
   }
+  // Close reused queue connections
+  Promise.allSettled(
+    Array.from(alertQueues.values()).map((q) => q.close()),
+  ).catch(() => {});
+  alertQueues.clear();
 }
