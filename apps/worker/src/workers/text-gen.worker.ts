@@ -1,6 +1,6 @@
 import { Worker } from "bullmq";
 import { eq } from "drizzle-orm";
-import { QUEUE_CONFIGS, REDIS_CONNECTION, tasks } from "@repo/shared";
+import { QUEUE_CONFIGS, REDIS_CONNECTION, WORKER_DEFAULTS, tasks } from "@repo/shared";
 import type { TaskJobPayload } from "@repo/shared";
 import { db } from "../lib/db";
 import { supabase } from "../lib/supabase";
@@ -17,7 +17,7 @@ export function createTextGenWorker() {
     async (job) => {
       const { taskId, userId, input } = job.data;
       let batchId: string | null = null;
-      const tracker = new ProgressTracker(taskId, userId);
+      const tracker = new ProgressTracker(job, taskId, userId);
 
       try {
         // 1. Mark active in DB
@@ -48,6 +48,7 @@ export function createTextGenWorker() {
         const result = `Generated text for: ${input.prompt}`;
 
         // 3. Mark completed in DB
+        tracker.complete();
         await db
           .update(tasks)
           .set({
@@ -67,20 +68,24 @@ export function createTextGenWorker() {
 
         return { result };
       } catch (error) {
-        // Mark failed in DB
-        await db
-          .update(tasks)
-          .set({
-            status: "failed",
-            error: error instanceof Error ? error.message : String(error),
-          })
-          .where(eq(tasks.id, taskId));
+        const isLastAttempt = job.attemptsMade + 1 >= (job.opts.attempts ?? 1);
+        log.error({ taskId, error, attempt: job.attemptsMade + 1, isLastAttempt }, "Text generation failed");
 
-        // Increment batch even on failure (for progress tracking)
-        if (batchId) {
-          await supabase.rpc("increment_batch_completed", {
-            p_batch_id: batchId,
-          });
+        if (isLastAttempt) {
+          await db
+            .update(tasks)
+            .set({
+              status: "failed",
+              error: error instanceof Error ? error.message : String(error),
+            })
+            .where(eq(tasks.id, taskId));
+
+          // Increment batch even on failure (for progress tracking)
+          if (batchId) {
+            await supabase.rpc("increment_batch_completed", {
+              p_batch_id: batchId,
+            });
+          }
         }
 
         throw error; // Re-throw so BullMQ retries
@@ -93,6 +98,7 @@ export function createTextGenWorker() {
       connection: REDIS_CONNECTION,
       concurrency: config.concurrency,
       limiter: config.rateLimit,
+      ...WORKER_DEFAULTS,
     },
   );
 
