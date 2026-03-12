@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState, memo } from "react";
+import { useRouter } from "next/navigation";
 import type { Tables } from "@/lib/database.types";
 import { useTasks } from "@/hooks/use-tasks";
 import {
@@ -20,7 +21,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ImageDialog } from "@/components/image-dialog";
 import { SpinnerGap, CaretUpDown } from "@phosphor-icons/react";
 import { track } from "@/lib/analytics";
 import { timeAgo, formatLabel, getImageOutput, TYPE_ICON, TASK_STATUS_BADGE } from "@/lib/task-utils";
@@ -39,18 +39,21 @@ const FILTERS = [
 /* ── TaskRow (memoized for realtime perf) ──────────── */
 
 const TaskRow = memo(function TaskRow({ task }: { task: Tables<"tasks"> }) {
+  const router = useRouter();
   const prompt = (task.input as { prompt?: string })?.prompt ?? "";
   const isOptimistic = task.id.startsWith("optimistic-");
   const imageOutput = getImageOutput(task);
-  const [dialogOpen, setDialogOpen] = useState(false);
   const Icon = TYPE_ICON[task.type];
   const isActive = task.status === "active";
 
   return (
     <>
       <TableRow
-        className={cn(isOptimistic && "opacity-50", imageOutput && "cursor-pointer")}
-        onClick={imageOutput ? () => setDialogOpen(true) : undefined}
+        className={cn("cursor-pointer hover:bg-muted/50", isOptimistic && "opacity-50")}
+        onClick={() => {
+          if (isOptimistic) return;
+          router.push(`/dashboard/tasks/${task.id}`);
+        }}
       >
         {/* Type */}
         <TableCell>
@@ -108,15 +111,6 @@ const TaskRow = memo(function TaskRow({ task }: { task: Tables<"tasks"> }) {
         </TableCell>
       </TableRow>
 
-      {imageOutput && (
-        <ImageDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          imageUrl={imageOutput.image_url}
-          prompt={imageOutput.prompt}
-          taskId={task.id}
-        />
-      )}
     </>
   );
 });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import cronstrue from "cronstrue";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -67,6 +68,7 @@ function SkeletonRows({ count = 5 }: { count?: number }) {
 }
 
 export function ScheduleList() {
+  const router = useRouter();
   const { data: schedules = [], isLoading } = useSchedules();
   const toggleSchedule = useToggleSchedule();
   const deleteSchedule = useDeleteSchedule();
@@ -150,7 +152,7 @@ export function ScheduleList() {
               const isOneTimeRan = schedule.run_at && schedule.run_count > 0;
 
               return (
-                <TableRow key={schedule.id}>
+                <TableRow key={schedule.id} className="cursor-pointer hover:bg-muted/50" onClick={() => router.push(`/dashboard/schedules/${schedule.id}`)}>
                   <TableCell className="font-medium">{schedule.name}</TableCell>
                   <TableCell>
                     <span className="text-muted-foreground">{formatLabel(schedule.type)}</span>
@@ -184,7 +186,7 @@ export function ScheduleList() {
                         <Button
                           variant="ghost"
                           size="icon-sm"
-                          onClick={() => toggleSchedule.mutate({ id: schedule.id, enabled: !schedule.enabled })}
+                          onClick={(e) => { e.stopPropagation(); toggleSchedule.mutate({ id: schedule.id, enabled: !schedule.enabled }); }}
                           disabled={toggleSchedule.isPending}
                           aria-label={schedule.enabled ? "Pause" : "Resume"}
                         >
@@ -195,7 +197,7 @@ export function ScheduleList() {
                         variant="ghost"
                         size="icon-sm"
                         className="text-destructive hover:text-destructive"
-                        onClick={() => deleteSchedule.mutate(schedule.id)}
+                        onClick={(e) => { e.stopPropagation(); deleteSchedule.mutate(schedule.id); }}
                         disabled={deleteSchedule.isPending}
                         aria-label="Delete"
                       >
