@@ -8,17 +8,9 @@ function getBaseUrl(): string {
   return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 }
 
-export async function checkUserExists(emailOrPhone: string) {
+export async function checkUserExists(email: string) {
   const supabase = createAdminClient();
-  const isPhone = /^\+?\d{10,15}$/.test(emailOrPhone.replace(/[\s()-]/g, ""));
-
-  if (isPhone) {
-    const normalized = emailOrPhone.replace(/[\s()-]/g, "");
-    const phone = normalized.startsWith("+") ? normalized : `+1${normalized}`;
-    return { exists: false, type: "phone" as const, normalized: phone, provider: null, hasPassword: false };
-  }
-
-  const email = emailOrPhone.trim().toLowerCase();
+  email = email.trim().toLowerCase();
 
   // Paginate through all users to find by email.
   // getUserByEmail doesn't exist in this supabase-js version, so we use listUsers.
@@ -101,34 +93,6 @@ export async function signInWithGoogle() {
   }
 
   redirect(data.url);
-}
-
-export async function sendPhoneOtp(phone: string) {
-  const supabase = await createClient();
-
-  const { error } = await supabase.auth.signInWithOtp({ phone });
-
-  if (error) {
-    return { error: error.message };
-  }
-
-  return { success: true };
-}
-
-export async function verifyPhoneOtp(phone: string, token: string) {
-  const supabase = await createClient();
-
-  const { error } = await supabase.auth.verifyOtp({
-    phone,
-    token,
-    type: "sms",
-  });
-
-  if (error) {
-    return { error: error.message };
-  }
-
-  redirect("/");
 }
 
 export async function resendConfirmationEmail(email: string) {

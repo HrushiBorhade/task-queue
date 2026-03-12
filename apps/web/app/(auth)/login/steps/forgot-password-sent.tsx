@@ -6,14 +6,14 @@ import { useAuth } from "../context";
 import { resetPasswordForEmail } from "../actions";
 
 export function ForgotPasswordSent() {
-  const { emailOrPhone, setStep, setError } = useAuth();
+  const { email, setStep, setError } = useAuth();
   const [resending, setResending] = useState(false);
   const [resent, setResent] = useState(false);
 
   async function handleResend() {
     setResending(true);
     setResent(false);
-    const result = await resetPasswordForEmail(emailOrPhone);
+    const result = await resetPasswordForEmail(email);
     setResending(false);
 
     if (result?.error) {
@@ -30,7 +30,7 @@ export function ForgotPasswordSent() {
         <p className="text-sm text-balance text-muted-foreground">
           We&apos;ve sent a password reset link to
         </p>
-        <p className="font-medium">{emailOrPhone}</p>
+        <p className="font-medium">{email}</p>
       </div>
       <FieldDescription className="text-center">
         Didn&apos;t receive it?{" "}
@@ -46,7 +46,7 @@ export function ForgotPasswordSent() {
       <FieldDescription className="text-center">
         <button
           type="button"
-          onClick={() => setStep("enter-email-or-phone")}
+          onClick={() => setStep("enter-email")}
           className="underline underline-offset-4 hover:text-primary"
         >
           Back to sign in

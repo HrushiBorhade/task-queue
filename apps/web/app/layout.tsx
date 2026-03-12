@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { PostHogProvider } from "@/components/providers/posthog";
 import { ClarityProvider } from "@/components/providers/clarity";
+import { ThemeProvider } from "@/components/providers/theme";
 import { cn } from "@/lib/utils";
 import "./globals.css";
 
@@ -30,15 +31,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn("font-mono", jetbrainsMono.variable)}>
+    <html lang="en" className={cn("font-mono", jetbrainsMono.variable)} suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <PostHogProvider>
-          <ClarityProvider>
-            {children}
-          </ClarityProvider>
-        </PostHogProvider>
+        <ThemeProvider>
+          <PostHogProvider>
+            <ClarityProvider>
+              {children}
+            </ClarityProvider>
+          </PostHogProvider>
+        </ThemeProvider>
         <Analytics />
         <SpeedInsights />
       </body>

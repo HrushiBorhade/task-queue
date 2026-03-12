@@ -10,28 +10,25 @@ import {
   FieldSeparator,
   FieldDescription,
 } from "@/components/ui/field";
-import { GoogleLogo } from "@phosphor-icons/react";
+import { GoogleIcon } from "@/components/icons/google";
 import { useAuth } from "../context";
 import { checkUserExists, signInWithGoogle } from "../actions";
 
-export function EnterEmailOrPhone() {
-  const { setStep, emailOrPhone, setEmailOrPhone, setInputType, setIsNewUser, setOauthProvider, setError } = useAuth();
+export function EnterEmail() {
+  const { setStep, email, setEmail, setIsNewUser, setOauthProvider, setError } = useAuth();
   const [isPending, startTransition] = useTransition();
   const [googlePending, setGooglePending] = useState(false);
 
   function handleContinue() {
-    if (!emailOrPhone.trim()) return;
+    if (!email.trim()) return;
 
     startTransition(async () => {
       setError(null);
-      const result = await checkUserExists(emailOrPhone);
-      setInputType(result.type);
-      setEmailOrPhone(result.normalized);
+      const result = await checkUserExists(email);
+      setEmail(result.normalized);
       setIsNewUser(!result.exists);
 
-      if (result.type === "phone") {
-        setStep("verify-otp");
-      } else if (result.exists && result.provider && !result.hasPassword) {
+      if (result.exists && result.provider && !result.hasPassword) {
         setOauthProvider(result.provider);
         setStep("oauth-user");
       } else if (result.exists) {
@@ -69,18 +66,18 @@ export function EnterEmailOrPhone() {
           </p>
         </div>
         <Field>
-          <FieldLabel htmlFor="email-or-phone">Email or phone</FieldLabel>
+          <FieldLabel htmlFor="email">Email</FieldLabel>
           <Input
-            id="email-or-phone"
+            id="email"
             placeholder="m@example.com"
-            value={emailOrPhone}
-            onChange={(e) => setEmailOrPhone(e.target.value)}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             disabled={busy}
             autoFocus
           />
         </Field>
         <Field>
-          <Button type="submit" disabled={busy || !emailOrPhone.trim()}>
+          <Button type="submit" disabled={busy || !email.trim()}>
             {isPending ? "Checking..." : "Continue"}
           </Button>
         </Field>
@@ -94,7 +91,7 @@ export function EnterEmailOrPhone() {
             onClick={handleGoogle}
             disabled={busy}
           >
-            <GoogleLogo data-icon="inline-start" weight="bold" />
+            <GoogleIcon data-icon="inline-start" />
             Google
           </Button>
         </Field>

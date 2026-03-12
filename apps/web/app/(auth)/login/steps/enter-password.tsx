@@ -8,7 +8,7 @@ import { useAuth } from "../context";
 import { signInWithPassword, resetPasswordForEmail, checkUserExists } from "../actions";
 
 export function EnterPassword() {
-  const { emailOrPhone, setStep, setOauthProvider, setError } = useAuth();
+  const { email, setStep, setOauthProvider, setError } = useAuth();
   const [password, setPassword] = useState("");
   const [isPending, startTransition] = useTransition();
   const [resetPending, setResetPending] = useState(false);
@@ -18,10 +18,10 @@ export function EnterPassword() {
 
     startTransition(async () => {
       setError(null);
-      const result = await signInWithPassword(emailOrPhone, password);
+      const result = await signInWithPassword(email, password);
       if (result?.error) {
         if (result.error === "Invalid login credentials") {
-          const check = await checkUserExists(emailOrPhone);
+          const check = await checkUserExists(email);
           if (check.exists && check.provider && !check.hasPassword) {
             setOauthProvider(check.provider);
             setStep("oauth-user");
@@ -36,7 +36,7 @@ export function EnterPassword() {
   async function handleForgotPassword() {
     setResetPending(true);
     setError(null);
-    const result = await resetPasswordForEmail(emailOrPhone);
+    const result = await resetPasswordForEmail(email);
     setResetPending(false);
 
     if (result?.error) {
@@ -58,7 +58,7 @@ export function EnterPassword() {
       <FieldGroup>
         <div className="flex flex-col items-center gap-2 text-center">
           <h1 className="text-2xl font-bold">Welcome back</h1>
-          <p className="text-sm text-balance text-muted-foreground">{emailOrPhone}</p>
+          <p className="text-sm text-balance text-muted-foreground">{email}</p>
         </div>
         <Field>
           <div className="flex items-center">

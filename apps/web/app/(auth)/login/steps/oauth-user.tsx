@@ -3,16 +3,16 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup } from "@/components/ui/field";
-import { GoogleLogo } from "@phosphor-icons/react";
+import { GoogleIcon } from "@/components/icons/google";
 import { useAuth } from "../context";
 import { signInWithGoogle } from "../actions";
 
 const SUPPORTED_PROVIDERS: Record<string, { label: string; icon: React.ReactNode; action: () => Promise<{ error: string } | void> }> = {
-  google: { label: "Google", icon: <GoogleLogo data-icon="inline-start" weight="bold" />, action: signInWithGoogle },
+  google: { label: "Google", icon: <GoogleIcon data-icon="inline-start" />, action: signInWithGoogle },
 };
 
 export function OAuthUser() {
-  const { emailOrPhone, oauthProvider, setError } = useAuth();
+  const { email, oauthProvider, setError } = useAuth();
   const [isPending, setIsPending] = useState(false);
 
   const supported = oauthProvider ? SUPPORTED_PROVIDERS[oauthProvider] : null;
@@ -38,7 +38,7 @@ export function OAuthUser() {
       <div className="flex flex-col items-center gap-2 text-center">
         <h1 className="text-2xl font-bold">Welcome back</h1>
         <p className="text-sm text-balance text-muted-foreground">
-          <strong>{emailOrPhone}</strong> was created using {providerLabel}.
+          <strong>{email}</strong> was created using {providerLabel}.
           Sign in with {providerLabel} to continue.
         </p>
       </div>

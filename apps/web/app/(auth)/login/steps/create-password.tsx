@@ -8,7 +8,7 @@ import { useAuth } from "../context";
 import { signUpWithEmail } from "../actions";
 
 export function CreatePassword() {
-  const { emailOrPhone, setStep, setError } = useAuth();
+  const { email, setStep, setError } = useAuth();
   const [password, setLocalPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -27,7 +27,7 @@ export function CreatePassword() {
     }
 
     startTransition(async () => {
-      const result = await signUpWithEmail(emailOrPhone, password);
+      const result = await signUpWithEmail(email, password);
 
       if (result?.error) {
         setError(result.error);
@@ -50,7 +50,7 @@ export function CreatePassword() {
       <FieldGroup>
         <div className="flex flex-col items-center gap-2 text-center">
           <h1 className="text-2xl font-bold">Create account</h1>
-          <p className="text-sm text-balance text-muted-foreground">{emailOrPhone}</p>
+          <p className="text-sm text-balance text-muted-foreground">{email}</p>
         </div>
         <Field>
           <FieldLabel htmlFor="password">Password</FieldLabel>

@@ -3,24 +3,19 @@
 import { createContext, useContext, useState, useCallback, useMemo } from "react";
 
 export type AuthStep =
-  | "enter-email-or-phone"
+  | "enter-email"
   | "create-password"
   | "enter-password"
-  | "verify-otp"
   | "check-email"
   | "oauth-user"
   | "forgot-password-sent";
-
-type InputType = "email" | "phone";
 
 interface AuthContextValue {
   step: AuthStep;
   setStep: (step: AuthStep) => void;
   goBack: () => void;
-  emailOrPhone: string;
-  setEmailOrPhone: (value: string) => void;
-  inputType: InputType;
-  setInputType: (type: InputType) => void;
+  email: string;
+  setEmail: (value: string) => void;
   isNewUser: boolean;
   setIsNewUser: (value: boolean) => void;
   oauthProvider: string | null;
@@ -34,16 +29,15 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [step, setStep] = useState<AuthStep>("enter-email-or-phone");
-  const [emailOrPhone, setEmailOrPhone] = useState("");
-  const [inputType, setInputType] = useState<InputType>("email");
+  const [step, setStep] = useState<AuthStep>("enter-email");
+  const [email, setEmail] = useState("");
   const [isNewUser, setIsNewUser] = useState(false);
   const [oauthProvider, setOauthProvider] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const goBack = useCallback(() => {
-    setStep("enter-email-or-phone");
+    setStep("enter-email");
     setError(null);
     setIsNewUser(false);
     setOauthProvider(null);
@@ -54,10 +48,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       step,
       setStep,
       goBack,
-      emailOrPhone,
-      setEmailOrPhone,
-      inputType,
-      setInputType,
+      email,
+      setEmail,
       isNewUser,
       setIsNewUser,
       oauthProvider,
@@ -67,7 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loading,
       setLoading,
     }),
-    [step, emailOrPhone, inputType, isNewUser, oauthProvider, error, loading, goBack],
+    [step, email, isNewUser, oauthProvider, error, loading, goBack],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

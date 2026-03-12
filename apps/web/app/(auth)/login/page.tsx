@@ -4,10 +4,9 @@ import { ArrowLeft } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AuthProvider, useAuth } from "./context";
-import { EnterEmailOrPhone } from "./steps/enter-email-or-phone";
+import { EnterEmail } from "./steps/enter-email";
 import { CreatePassword } from "./steps/create-password";
 import { EnterPassword } from "./steps/enter-password";
-import { VerifyOtp } from "./steps/verify-otp";
 import { CheckEmail } from "./steps/check-email";
 import { OAuthUser } from "./steps/oauth-user";
 import { ForgotPasswordSent } from "./steps/forgot-password-sent";
@@ -15,7 +14,6 @@ import { ForgotPasswordSent } from "./steps/forgot-password-sent";
 const STEPS_WITH_BACK = new Set([
   "create-password",
   "enter-password",
-  "verify-otp",
   "oauth-user",
   "forgot-password-sent",
   "check-email",
@@ -51,10 +49,9 @@ function StepRenderer() {
               key={step}
               className="animate-in fade-in slide-in-from-right-4 duration-300"
             >
-              {step === "enter-email-or-phone" && <EnterEmailOrPhone />}
+              {step === "enter-email" && <EnterEmail />}
               {step === "create-password" && <CreatePassword />}
               {step === "enter-password" && <EnterPassword />}
-              {step === "verify-otp" && <VerifyOtp />}
               {step === "check-email" && <CheckEmail />}
               {step === "oauth-user" && <OAuthUser />}
               {step === "forgot-password-sent" && <ForgotPasswordSent />}

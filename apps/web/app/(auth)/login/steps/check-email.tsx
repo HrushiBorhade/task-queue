@@ -6,14 +6,14 @@ import { useAuth } from "../context";
 import { resendConfirmationEmail } from "../actions";
 
 export function CheckEmail() {
-  const { emailOrPhone, setError } = useAuth();
+  const { email, setError } = useAuth();
   const [resending, setResending] = useState(false);
   const [resent, setResent] = useState(false);
 
   async function handleResend() {
     setResending(true);
     setResent(false);
-    const result = await resendConfirmationEmail(emailOrPhone);
+    const result = await resendConfirmationEmail(email);
     setResending(false);
 
     if (result?.error) {
@@ -30,7 +30,7 @@ export function CheckEmail() {
         <p className="text-sm text-balance text-muted-foreground">
           We&apos;ve sent a confirmation link to
         </p>
-        <p className="font-medium">{emailOrPhone}</p>
+        <p className="font-medium">{email}</p>
       </div>
       <FieldDescription className="text-center">
         Didn&apos;t receive it?{" "}
