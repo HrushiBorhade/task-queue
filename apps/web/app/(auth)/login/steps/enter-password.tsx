@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { useAuth } from "../context";
 import { signInWithPassword, resetPasswordForEmail, checkUserExists } from "../actions";
+import { track } from "@/lib/analytics";
 
 export function EnterPassword() {
   const { email, setStep, setOauthProvider, setError } = useAuth();
@@ -18,6 +19,7 @@ export function EnterPassword() {
 
     startTransition(async () => {
       setError(null);
+      track("login_email_password_submitted", { is_new_user: false });
       const result = await signInWithPassword(email, password);
       if (result?.error) {
         if (result.error === "Invalid login credentials") {

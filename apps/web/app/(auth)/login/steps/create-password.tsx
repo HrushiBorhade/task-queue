@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Field, FieldGroup, FieldLabel, FieldError } from "@/components/ui/field";
 import { useAuth } from "../context";
 import { signUpWithEmail } from "../actions";
+import { track } from "@/lib/analytics";
 
 export function CreatePassword() {
   const { email, setStep, setError } = useAuth();
@@ -27,6 +28,7 @@ export function CreatePassword() {
     }
 
     startTransition(async () => {
+      track("login_email_password_submitted", { is_new_user: true });
       const result = await signUpWithEmail(email, password);
 
       if (result?.error) {

@@ -8,11 +8,11 @@ import {
   FieldGroup,
   FieldLabel,
   FieldSeparator,
-  FieldDescription,
 } from "@/components/ui/field";
 import { GoogleIcon } from "@/components/icons/google";
 import { useAuth } from "../context";
 import { checkUserExists, signInWithGoogle } from "../actions";
+import { track } from "@/lib/analytics";
 
 export function EnterEmail() {
   const { setStep, email, setEmail, setIsNewUser, setOauthProvider, setError } = useAuth();
@@ -24,6 +24,7 @@ export function EnterEmail() {
 
     startTransition(async () => {
       setError(null);
+      track("login_email_submitted", { email_domain: email.split("@")[1] ?? "unknown" });
       const result = await checkUserExists(email);
       setEmail(result.normalized);
       setIsNewUser(!result.exists);
@@ -42,6 +43,7 @@ export function EnterEmail() {
   async function handleGoogle() {
     setGooglePending(true);
     setError(null);
+    track("login_google_clicked", {});
     const result = await signInWithGoogle();
     if (result?.error) {
       setError(result.error);
@@ -53,10 +55,7 @@ export function EnterEmail() {
 
   return (
     <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        handleContinue();
-      }}
+      action={() => handleContinue()}
     >
       <FieldGroup>
         <div className="flex flex-col items-center gap-2 text-center">
@@ -73,7 +72,6 @@ export function EnterEmail() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={busy}
-            autoFocus
           />
         </Field>
         <Field>
