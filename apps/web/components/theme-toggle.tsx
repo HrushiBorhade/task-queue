@@ -3,15 +3,22 @@
 import { useTheme } from "next-themes";
 import { Moon, Sun } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
+import { track } from "@/lib/analytics";
 
 export function ThemeToggle() {
   const { setTheme, resolvedTheme } = useTheme();
+
+  function handleToggle() {
+    const next = resolvedTheme === "dark" ? "light" : "dark";
+    setTheme(next);
+    track("theme_toggled", { theme: next });
+  }
 
   return (
     <Button
       variant="ghost"
       size="icon"
-      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+      onClick={handleToggle}
       aria-label="Toggle theme"
     >
       <Sun data-icon weight="bold" className="scale-100 dark:scale-0 transition-transform" />
