@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { Queue } from "bullmq";
 import { getUser } from "@/lib/auth";
-import { QUEUE_CONFIGS, REDIS_CONNECTION } from "@repo/shared";
+import { QUEUE_CONFIGS, REDIS_CONNECTION, SCHEDULER_QUEUE } from "@repo/shared";
 import type { QueueConfig } from "@repo/shared";
 
 export async function GET() {
@@ -18,12 +18,17 @@ export async function GET() {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  const allQueueNames = [
+    ...(Object.values(QUEUE_CONFIGS) as QueueConfig[]).map((c) => c.name),
+    SCHEDULER_QUEUE,
+  ];
+
   const stats = await Promise.all(
-    (Object.values(QUEUE_CONFIGS) as QueueConfig[]).map(async (config) => {
-      const queue = new Queue(config.name, { connection: REDIS_CONNECTION });
+    allQueueNames.map(async (name) => {
+      const queue = new Queue(name, { connection: REDIS_CONNECTION });
       const counts = await queue.getJobCounts();
       await queue.close();
-      return { name: config.name, ...counts };
+      return { name, ...counts };
     })
   );
 
