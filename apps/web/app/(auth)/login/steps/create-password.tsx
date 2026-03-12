@@ -50,7 +50,7 @@ export function CreatePassword() {
       <FieldGroup>
         <div className="flex flex-col items-center gap-2 text-center">
           <h1 className="text-2xl font-bold">Create account</h1>
-          <p className="text-balance text-muted-foreground">{emailOrPhone}</p>
+          <p className="text-sm text-balance text-muted-foreground">{emailOrPhone}</p>
         </div>
         <Field>
           <FieldLabel htmlFor="password">Password</FieldLabel>

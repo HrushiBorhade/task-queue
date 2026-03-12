@@ -27,7 +27,7 @@ export function CheckEmail() {
     <FieldGroup>
       <div className="flex flex-col items-center gap-2 text-center">
         <h1 className="text-2xl font-bold">Check your email</h1>
-        <p className="text-balance text-muted-foreground">
+        <p className="text-sm text-balance text-muted-foreground">
           We&apos;ve sent a confirmation link to
         </p>
         <p className="font-medium">{emailOrPhone}</p>

@@ -66,7 +66,7 @@ export default function ResetPasswordPage() {
           <FieldGroup>
             <div className="flex flex-col items-center gap-2 text-center">
               <h1 className="text-2xl font-bold">Password reset</h1>
-              <p className="text-balance text-muted-foreground">
+              <p className="text-sm text-balance text-muted-foreground">
                 Your password has been updated. You can now sign in.
               </p>
             </div>
@@ -93,7 +93,7 @@ export default function ResetPasswordPage() {
           <FieldGroup>
             <div className="flex flex-col items-center gap-2 text-center">
               <h1 className="text-2xl font-bold">Reset password</h1>
-              <p className="text-balance text-muted-foreground">
+              <p className="text-sm text-balance text-muted-foreground">
                 Create a new password for your account
               </p>
             </div>

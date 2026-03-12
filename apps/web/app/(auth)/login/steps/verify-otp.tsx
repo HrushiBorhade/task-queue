@@ -67,7 +67,7 @@ export function VerifyOtp() {
     <FieldGroup>
       <div className="flex flex-col items-center gap-2 text-center">
         <h1 className="text-2xl font-bold">Verify phone</h1>
-        <p className="text-balance text-muted-foreground">
+        <p className="text-sm text-balance text-muted-foreground">
           {sendingOtp ? "Sending code..." : <>We sent a 6-digit code to <strong>{emailOrPhone}</strong></>}
         </p>
       </div>

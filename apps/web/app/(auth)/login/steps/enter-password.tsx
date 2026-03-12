@@ -58,7 +58,7 @@ export function EnterPassword() {
       <FieldGroup>
         <div className="flex flex-col items-center gap-2 text-center">
           <h1 className="text-2xl font-bold">Welcome back</h1>
-          <p className="text-balance text-muted-foreground">{emailOrPhone}</p>
+          <p className="text-sm text-balance text-muted-foreground">{emailOrPhone}</p>
         </div>
         <Field>
           <div className="flex items-center">
@@ -67,7 +67,7 @@ export function EnterPassword() {
               type="button"
               onClick={handleForgotPassword}
               disabled={busy}
-              className="ml-auto text-sm underline-offset-2 hover:underline disabled:opacity-50"
+              className="ml-auto text-xs underline-offset-2 hover:underline disabled:opacity-50"
             >
               {resetPending ? "Sending..." : "Forgot your password?"}
             </button>
