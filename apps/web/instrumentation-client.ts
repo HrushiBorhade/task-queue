@@ -1,11 +1,15 @@
 import * as Sentry from "@sentry/nextjs";
 
-Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-  tracesSampleRate: 1.0,
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
-  integrations: [Sentry.replayIntegration()],
-});
+const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
+
+if (dsn) {
+  Sentry.init({
+    dsn,
+    tracesSampleRate: 1.0,
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+    integrations: [Sentry.replayIntegration()],
+  });
+}
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
