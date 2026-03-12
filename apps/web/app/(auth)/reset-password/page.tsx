@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useReducer, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,26 +9,62 @@ import { Field, FieldGroup, FieldLabel, FieldError } from "@/components/ui/field
 import { createClient } from "@/lib/supabase/client";
 import { updatePassword } from "../login/actions";
 
+interface ResetState {
+  password: string;
+  confirmPassword: string;
+  error: string | null;
+  success: boolean;
+  sessionChecked: boolean;
+}
+
+type ResetAction =
+  | { type: "SET_PASSWORD"; value: string }
+  | { type: "SET_CONFIRM_PASSWORD"; value: string }
+  | { type: "SET_ERROR"; error: string | null }
+  | { type: "SET_SUCCESS" }
+  | { type: "SESSION_CHECKED" };
+
+function resetReducer(state: ResetState, action: ResetAction): ResetState {
+  switch (action.type) {
+    case "SET_PASSWORD":
+      return { ...state, password: action.value, error: null };
+    case "SET_CONFIRM_PASSWORD":
+      return { ...state, confirmPassword: action.value, error: null };
+    case "SET_ERROR":
+      return { ...state, error: action.error };
+    case "SET_SUCCESS":
+      return { ...state, success: true };
+    case "SESSION_CHECKED":
+      return { ...state, sessionChecked: true };
+    default:
+      return state;
+  }
+}
+
+const initialState: ResetState = {
+  password: "",
+  confirmPassword: "",
+  error: null,
+  success: false,
+  sessionChecked: false,
+};
+
 export default function ResetPasswordPage() {
   const router = useRouter();
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [state, dispatch] = useReducer(resetReducer, initialState);
   const [isPending, startTransition] = useTransition();
-  const [sessionChecked, setSessionChecked] = useState(false);
 
   useEffect(() => {
     createClient().auth.getUser().then(({ data }) => {
       if (!data.user) {
         router.replace("/login?error=reset_link_expired");
       } else {
-        setSessionChecked(true);
+        dispatch({ type: "SESSION_CHECKED" });
       }
     });
   }, [router]);
 
-  if (!sessionChecked) {
+  if (!state.sessionChecked) {
     return (
       <Card className="overflow-hidden p-0">
         <CardContent className="flex items-center justify-center p-6 md:p-8">
@@ -39,27 +75,27 @@ export default function ResetPasswordPage() {
   }
 
   function handleSubmit() {
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+    if (state.password.length < 6) {
+      dispatch({ type: "SET_ERROR", error: "Password must be at least 6 characters" });
       return;
     }
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
+    if (state.password !== state.confirmPassword) {
+      dispatch({ type: "SET_ERROR", error: "Passwords do not match" });
       return;
     }
 
     startTransition(async () => {
-      setError(null);
-      const result = await updatePassword(password);
+      dispatch({ type: "SET_ERROR", error: null });
+      const result = await updatePassword(state.password);
       if (result?.error) {
-        setError(result.error);
+        dispatch({ type: "SET_ERROR", error: result.error });
       } else {
-        setSuccess(true);
+        dispatch({ type: "SET_SUCCESS" });
       }
     });
   }
 
-  if (success) {
+  if (state.success) {
     return (
       <Card className="overflow-hidden p-0">
         <CardContent className="p-6 md:p-8">
@@ -97,20 +133,16 @@ export default function ResetPasswordPage() {
                 Create a new password for your account
               </p>
             </div>
-            {error && <FieldError>{error}</FieldError>}
+            {state.error && <FieldError>{state.error}</FieldError>}
             <Field>
               <FieldLabel htmlFor="new-password">New password</FieldLabel>
               <Input
                 id="new-password"
                 type="password"
                 placeholder="At least 6 characters"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setError(null);
-                }}
+                value={state.password}
+                onChange={(e) => dispatch({ type: "SET_PASSWORD", value: e.target.value })}
                 disabled={isPending}
-                autoFocus
                 required
               />
             </Field>
@@ -119,17 +151,14 @@ export default function ResetPasswordPage() {
               <Input
                 id="confirm-password"
                 type="password"
-                value={confirmPassword}
-                onChange={(e) => {
-                  setConfirmPassword(e.target.value);
-                  setError(null);
-                }}
+                value={state.confirmPassword}
+                onChange={(e) => dispatch({ type: "SET_CONFIRM_PASSWORD", value: e.target.value })}
                 disabled={isPending}
                 required
               />
             </Field>
             <Field>
-              <Button type="submit" disabled={isPending || !password || !confirmPassword}>
+              <Button type="submit" disabled={isPending || !state.password || !state.confirmPassword}>
                 {isPending ? "Updating..." : "Reset password"}
               </Button>
             </Field>

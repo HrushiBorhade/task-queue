@@ -83,7 +83,6 @@ export function EnterPassword() {
               setError(null);
             }}
             disabled={busy}
-            autoFocus
             required
           />
         </Field>

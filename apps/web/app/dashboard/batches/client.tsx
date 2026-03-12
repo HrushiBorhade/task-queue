@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useCallback } from "react";
 import Link from "next/link";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, LazyMotion, m, domAnimation } from "motion/react";
 import type { Tables } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -124,18 +124,20 @@ export function BatchesPageClient({ initialBatches }: Props) {
         </Button>
       </div>
 
+      <LazyMotion features={domAnimation}>
       <AnimatePresence>
         {createBatch.error && (
-          <motion.p
+          <m.p
             className="text-xs text-destructive"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
           >
             {createBatch.error.message}
-          </motion.p>
+          </m.p>
         )}
       </AnimatePresence>
+      </LazyMotion>
 
       <Table>
         <TableHeader>

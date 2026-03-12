@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "motion/react";
+import { LazyMotion, m, domAnimation } from "motion/react";
 import {
   Dialog,
   DialogContent,
@@ -79,8 +79,9 @@ export function ImageDialog({
           <DialogTitle className="text-sm">Generated Image</DialogTitle>
         </DialogHeader>
 
+        <LazyMotion features={domAnimation}>
         <div className="flex flex-col gap-3">
-          <motion.div
+          <m.div
             className="relative overflow-hidden rounded-lg"
             initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -92,7 +93,7 @@ export function ImageDialog({
               alt={prompt}
               className="w-full rounded-lg"
             />
-          </motion.div>
+          </m.div>
 
           <p className="text-xs text-muted-foreground">{prompt}</p>
 
@@ -111,6 +112,7 @@ export function ImageDialog({
             </Button>
           </div>
         </div>
+        </LazyMotion>
       </DialogContent>
     </Dialog>
   );

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "motion/react";
+import { LazyMotion, m, domAnimation } from "motion/react";
 import type { NavItem } from "@/components/dashboard/sidebar-items";
 import {
   SidebarGroup,
@@ -22,6 +22,7 @@ export function NavMain({
   const pathname = usePathname();
 
   return (
+    <LazyMotion features={domAnimation}>
     <SidebarGroup>
       <SidebarGroupLabel>{label}</SidebarGroupLabel>
       <SidebarMenu>
@@ -34,7 +35,7 @@ export function NavMain({
           return (
             <SidebarMenuItem key={item.title} className="relative">
               {isActive && (
-                <motion.div
+                <m.div
                   layoutId="sidebar-active-indicator"
                   className="absolute inset-0 rounded-[calc(var(--radius-sm)+2px)] bg-sidebar-accent"
                   transition={{ type: "spring", stiffness: 350, damping: 30 }}
@@ -59,5 +60,6 @@ export function NavMain({
         })}
       </SidebarMenu>
     </SidebarGroup>
+    </LazyMotion>
   );
 }

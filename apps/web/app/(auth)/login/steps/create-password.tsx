@@ -66,7 +66,6 @@ export function CreatePassword() {
               setValidationError(null);
             }}
             disabled={isPending}
-            autoFocus
             minLength={6}
             required
           />

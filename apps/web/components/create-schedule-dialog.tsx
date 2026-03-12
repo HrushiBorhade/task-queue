@@ -287,8 +287,8 @@ export function CreateScheduleDialog({
                     Next runs
                   </p>
                   <div className="flex flex-col gap-0.5">
-                    {nextRuns.map((date, i) => (
-                      <span key={i} className="text-xs text-muted-foreground font-mono">
+                    {nextRuns.map((date) => (
+                      <span key={date.toISOString()} className="text-xs text-muted-foreground font-mono">
                         {formatShortDate(date)}
                       </span>
                     ))}
