@@ -13,5 +13,24 @@ services:
       timeout: 5s
       retries: 3
 
+  worker:
+    container_name: worker
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    ports:
+      - "9090:9090"  # health check
+      - "9091:9091"  # bull board
+      - "9092:9092"  # prometheus metrics
+    env_file:
+      - apps/worker/.env
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
   redis_data:
