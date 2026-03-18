@@ -66,7 +66,9 @@ function sendAlert(title: string, details: string, severity: "warning" | "critic
       body: JSON.stringify({
         text: `[${severity.toUpperCase()}] ${title}\n${details}`,
       }),
-    }).catch(() => {});
+    }).catch((err) => {
+      log.warn({ err, title }, "Failed to send Slack alert");
+    });
   }
 }
 

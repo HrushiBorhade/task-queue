@@ -15,6 +15,7 @@ import {
   stopMetricsServer,
   taskCompletedTotal,
   taskFailedTotal,
+  taskDuration,
 } from "./lib/metrics";
 import { startBullBoard, stopBullBoard } from "./bull-board";
 import { startAlerting, stopAlerting } from "./lib/alerting";
@@ -58,6 +59,10 @@ for (const queueName of allQueueNames) {
     connection: REDIS_CONNECTION,
   });
 
+  events.on("completed", ({ jobId, returnvalue }) => {
+    logger.info({ queue: queueName, jobId }, "Job completed");
+  });
+
   events.on("stalled", ({ jobId }) => {
     logger.warn({ queue: queueName, jobId }, "Job stalled");
   });
@@ -71,11 +76,19 @@ for (const queueName of allQueueNames) {
 
 // ── Attach metrics handlers ────────────────────────────
 function attachWorkerHandlers(worker: Worker, queueName: string): void {
-  worker.on("completed", () => {
+  worker.on("completed", (job) => {
     taskCompletedTotal.inc({ queue: queueName });
+    if (job.processedOn && job.finishedOn) {
+      const durationSec = (job.finishedOn - job.processedOn) / 1000;
+      taskDuration.observe({ queue: queueName }, durationSec);
+    }
   });
-  worker.on("failed", () => {
+  worker.on("failed", (job) => {
     taskFailedTotal.inc({ queue: queueName });
+    if (job?.processedOn && job.finishedOn) {
+      const durationSec = (job.finishedOn - job.processedOn) / 1000;
+      taskDuration.observe({ queue: queueName }, durationSec);
+    }
   });
 }
 
