@@ -4,10 +4,13 @@
 FROM oven/bun:1-alpine AS base
 WORKDIR /app
 
-# Copy manifests first for layer caching
+# Copy ALL workspace manifests so bun.lock resolves correctly
+# (lockfile references all workspaces, not just worker)
 COPY package.json bun.lock ./
 COPY packages/shared/package.json packages/shared/
 COPY apps/worker/package.json apps/worker/
+COPY apps/web/package.json apps/web/
+COPY apps/trigger/package.json apps/trigger/
 
 # Install dependencies
 RUN bun install --frozen-lockfile

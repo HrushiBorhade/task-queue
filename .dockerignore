@@ -1,8 +1,17 @@
 .git
 node_modules
-apps/web
-apps/trigger
 .github
 *.md
 .env*
 .dockerignore
+
+# Exclude source code for apps we don't build,
+# but keep their package.json for lockfile resolution
+apps/web/app
+apps/web/components
+apps/web/hooks
+apps/web/lib
+apps/web/public
+apps/web/node_modules
+apps/trigger/src
+apps/trigger/node_modules
