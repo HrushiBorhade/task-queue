@@ -1,17 +1,17 @@
-.git
-node_modules
-.github
-*.md
-.env*
-.dockerignore
+# Deny-by-default: ignore everything, then allow what we need.
+# This is safer than listing exclusions — new files/dirs are
+# automatically excluded without updating this file.
+*
 
-# Exclude source code for apps we don't build,
-# but keep their package.json for lockfile resolution
-apps/web/app
-apps/web/components
-apps/web/hooks
-apps/web/lib
-apps/web/public
-apps/web/node_modules
-apps/trigger/src
-apps/trigger/node_modules
+# ── Allow: workspace manifests (needed for lockfile resolution) ──
+!package.json
+!bun.lock
+!tsconfig.json
+!packages/shared/package.json
+!apps/worker/package.json
+!apps/web/package.json
+!apps/trigger/package.json
+
+# ── Allow: source code we actually ship ──
+!packages/shared/
+!apps/worker/
