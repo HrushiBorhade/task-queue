@@ -1,0 +1,8 @@
+.git
+node_modules
+apps/web
+apps/trigger
+.github
+*.md
+.env*
+.dockerignore

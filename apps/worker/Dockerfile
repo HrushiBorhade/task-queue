@@ -22,5 +22,6 @@ EXPOSE 9090 9091 9092
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD wget -qO- http://localhost:9090/health || exit 1
 
+USER bun
 WORKDIR /app/apps/worker
 CMD ["bun", "run", "src/index.ts"]
