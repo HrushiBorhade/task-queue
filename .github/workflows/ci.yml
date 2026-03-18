@@ -15,7 +15,7 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/task-queue-worker
+  IMAGE_NAME: hrushiborhade/task-queue-worker
 
 jobs:
   lint:
