@@ -17,7 +17,6 @@ services:
     container_name: worker
     # For production: pull pre-built image from ghcr.io
     # image: ghcr.io/hrushiborhade/task-queue-worker:latest
-    # For local dev: build from source
     build:
       context: .
       dockerfile: apps/worker/Dockerfile
@@ -34,10 +33,6 @@ services:
       redis:
         condition: service_healthy
     restart: unless-stopped
-    # Security hardening
-    read_only: true
-    tmpfs:
-      - /tmp
     security_opt:
       - no-new-privileges:true
     cap_drop:

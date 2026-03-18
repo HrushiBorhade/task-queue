@@ -1,41 +1,38 @@
 # Build context: monorepo root
 #   docker build -f apps/worker/Dockerfile .
 #
-# NOTE: bun install --production is broken with workspaces (oven-sh/bun#25804).
-# Workaround: full install + manual removal of known devDeps.
-# Revisit when Bun fixes workspace-scoped --production.
+# bun install --production is broken with workspaces (oven-sh/bun#25804).
+# Workaround: full install in deps stage, prune devDeps, copy clean
+# node_modules to final stage. Revisit when Bun fixes #25804.
 
-FROM oven/bun:1.2.5-alpine
+# ── Stage 1: Install & prune ──
+FROM oven/bun:1.2.5-alpine AS deps
 WORKDIR /app
 
-# ── Layer 1: Workspace manifests (cached unless deps change) ──
-# All workspace package.json files are needed for lockfile resolution,
-# even though we only run the worker.
+# All workspace package.json files needed for lockfile resolution
 COPY package.json bun.lock ./
 COPY packages/shared/package.json packages/shared/
 COPY apps/worker/package.json apps/worker/
 COPY apps/web/package.json apps/web/
 COPY apps/trigger/package.json apps/trigger/
 
-# ── Layer 2: Install all dependencies ──
-# --production is broken with workspaces (oven-sh/bun#25804), so we
-# install everything and then prune devDeps manually below.
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile && \
+    rm -rf node_modules/@types \
+           node_modules/drizzle-kit \
+           node_modules/pino-pretty \
+           node_modules/typescript
 
-# ── Layer 3: Source code (only worker + shared) ──
+# ── Stage 2: Production ──
+FROM oven/bun:1.2.5-alpine
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY package.json ./
 COPY packages/shared/ packages/shared/
 COPY apps/worker/ apps/worker/
 COPY tsconfig.json ./
-
-# ── Layer 4: Prune devDependencies that aren't needed at runtime ──
-# This saves ~30-40 MB. Remove this block when Bun fixes #25804.
-RUN rm -rf \
-    node_modules/@types \
-    node_modules/drizzle-kit \
-    node_modules/pino-pretty \
-    node_modules/typescript \
-    node_modules/@esbuild \
-    node_modules/@libsql
 
 EXPOSE 9090 9091 9092
 
